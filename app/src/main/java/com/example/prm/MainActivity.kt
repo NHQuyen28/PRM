@@ -3,17 +3,18 @@ package com.example.prm
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.MaterialTheme
-import com.example.prm.navigation.AppNavigation
+// Nhớ import PRMTheme từ gói ui.theme của bạn
+import com.example.prm.ui.theme.PRMTheme
+import com.example.prm.ui.navigation.AppNavigation
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme {
+            // Thay đổi từ MaterialTheme sang PRMTheme
+            PRMTheme {
                 AppNavigation()
             }
         }
     }
 }
-
