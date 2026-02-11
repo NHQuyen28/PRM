@@ -26,19 +26,16 @@ import kotlinx.coroutines.launch
 @Composable
 fun LoginScreen(
     navController: NavHostController,
-    viewModel: LoginViewModel = viewModel()
+    viewModel: LoginViewModel = viewModel(),
+    autoExpand: Boolean = false  // ✅ Thêm tham số này
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // Trạng thái bottom sheet
-    var isExpanded by remember { mutableStateOf(false) }
-
-    // Offset animation cho bottom sheet (từ dưới lên)
-    val density = LocalDensity.current
-    val screenHeightPx = with(density) { 1000.dp.toPx() } // chiều cao ước tính
+    // ✅ Dùng autoExpand làm giá trị khởi tạo
+    var isExpanded by remember { mutableStateOf(autoExpand) }
 
     val offsetY by animateDpAsState(
-        targetValue = if (isExpanded) 0.dp else 800.dp, // 800dp = ẩn phía dưới
+        targetValue = if (isExpanded) 0.dp else 800.dp,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessLow
@@ -77,7 +74,6 @@ fun LoginScreen(
             if (!isExpanded) {
                 Spacer(modifier = Modifier.height(40.dp))
 
-                // NÚT LOGIN
                 Button(
                     onClick = { isExpanded = true },
                     modifier = Modifier
@@ -98,7 +94,7 @@ fun LoginScreen(
             }
         }
 
-        // --- BOTTOM SHEET (trồi lên từ dưới) ---
+        // --- BOTTOM SHEET ---
         Surface(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -106,7 +102,6 @@ fun LoginScreen(
                 .offset(y = offsetY)
                 .pointerInput(Unit) {
                     detectVerticalDragGestures { _, dragAmount ->
-                        // Kéo xuống > 100 -> đóng
                         if (dragAmount > 100) {
                             isExpanded = false
                         }
@@ -122,7 +117,6 @@ fun LoginScreen(
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Thanh kéo (drag handle)
                 Box(
                     modifier = Modifier
                         .width(50.dp)
@@ -149,7 +143,6 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Email Field
                 OutlinedTextField(
                     value = uiState.email,
                     onValueChange = { viewModel.onEmailChange(it) },
@@ -164,7 +157,6 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Password Field
                 OutlinedTextField(
                     value = uiState.password,
                     onValueChange = { viewModel.onPasswordChange(it) },
@@ -178,7 +170,6 @@ fun LoginScreen(
                     )
                 )
 
-                // Error message
                 uiState.errorMessage?.let {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -190,7 +181,6 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Sign In Button
                 Button(
                     onClick = { viewModel.login() },
                     modifier = Modifier
@@ -218,7 +208,6 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Close button
                 TextButton(
                     onClick = { isExpanded = false }
                 ) {
@@ -228,7 +217,29 @@ fun LoginScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Don't have an account?",
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
+                    TextButton(
+                        onClick = { navController.navigate("register") }
+                    ) {
+                        Text(
+                            "Sign Up",
+                            color = PurpleJobsly,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
