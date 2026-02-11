@@ -55,7 +55,7 @@ fun RegisterScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Jobsly",
+                "Badmini",
                 color = Color.White,
                 fontSize = 48.sp,
                 fontWeight = FontWeight.Bold
@@ -200,7 +200,7 @@ fun RegisterScreen(
 
                 Button(
                     onClick = {
-                        // TODO: Xử lý đăng ký
+                        navController.navigate("home") { popUpTo("register") { inclusive = true } }
                     },
                     modifier = Modifier
                         .fillMaxWidth()

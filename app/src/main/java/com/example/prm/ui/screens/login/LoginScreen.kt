@@ -57,7 +57,7 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Jobsly",
+                "Badmini",
                 color = Color.White,
                 fontSize = 48.sp,
                 fontWeight = FontWeight.Bold
@@ -182,7 +182,10 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 Button(
-                    onClick = { viewModel.login() },
+                    onClick = { 
+                        viewModel.login()
+                        navController.navigate("home") { popUpTo("login") { inclusive = true } }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
