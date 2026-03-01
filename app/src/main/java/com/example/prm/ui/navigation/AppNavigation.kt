@@ -1,11 +1,13 @@
 package com.example.prm.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.prm.data.session.SessionManager
 import com.example.prm.ui.screens.login.LoginScreen
 import com.example.prm.ui.screens.register.RegisterScreen
 import com.example.prm.ui.screens.home.HomeScreen
@@ -17,10 +19,15 @@ import com.example.prm.ui.screens.checkout.CheckoutScreen
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+    
+    // Check if user is already logged in
+    val context = LocalContext.current
+    val sessionManager = SessionManager(context)
+    val startDestination = if (sessionManager.isLoggedIn()) "home" else "login"
 
     NavHost(
         navController = navController,
-        startDestination = "login"
+        startDestination = startDestination
     ) {
         // Authentication screens
         composable(
