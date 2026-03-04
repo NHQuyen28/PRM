@@ -1,141 +1,201 @@
 package com.example.prm.data.repository
 
+import com.example.prm.data.remote.api.ProductApi
 import com.example.prm.data.remote.dto.*
+import com.example.prm.data.remote.RetrofitClient
 import com.example.prm.utils.ResultState
-import kotlinx.coroutines.delay
+import android.util.Log
+import com.google.gson.Gson
 
 class ProductRepository {
-    suspend fun getHome(): ResultState<HomeResponse> {
-        return try {
-            delay(300) // Simulate network delay
-            ResultState.Success(MockDataProvider.getMockHomeResponse())
-        } catch (e: Exception) {
-            ResultState.Error(e.message ?: "Unknown error")
-        }
-    }
-
-    suspend fun getCategories(): ResultState<List<Category>> {
-        return try {
-            delay(300)
-            ResultState.Success(MockDataProvider.getMockCategories())
-        } catch (e: Exception) {
-            ResultState.Error(e.message ?: "Unknown error")
-        }
-    }
-
-    suspend fun getBrands(): ResultState<List<Brand>> {
-        return try {
-            delay(300)
-            ResultState.Success(MockDataProvider.getMockBrands())
-        } catch (e: Exception) {
-            ResultState.Error(e.message ?: "Unknown error")
-        }
+    private val productApi = RetrofitClient.createService(ProductApi::class.java)
+    private val gson = Gson()
+    
+    companion object {
+        private const val TAG = "ProductRepository"
     }
 
     suspend fun getProducts(
-        search: String? = null,
-        categoryId: Int? = null,
-        brandId: Int? = null,
-        page: Int = 1
-    ): ResultState<ProductsResponse> {
+        page: Int = 1,
+        pageSize: Int = 20
+    ): ResultState<ProductListResponse> {
         return try {
-            delay(500)
-            val allProducts = MockDataProvider.getMockProducts()
-            val filtered = allProducts.filter { product ->
-                (search == null || product.name.contains(search, ignoreCase = true)) &&
-                (categoryId == null || product.categoryId == categoryId) &&
-                (brandId == null || product.brandId == brandId)
+            Log.d(TAG, "Fetching products: page=$page, pageSize=$pageSize")
+            val response = productApi.getProducts(page = page, pageSize = pageSize)
+
+            if (response.isSuccessful && response.body() != null) {
+                val apiResponse = response.body()!!
+                if (apiResponse.success && apiResponse.data != null) {
+                    Log.d(TAG, "Products fetched successfully: ${apiResponse.data.products.size} items")
+                    ResultState.Success(apiResponse.data)
+                } else {
+                    val errorMsg = apiResponse.message ?: "Failed to fetch products"
+                    Log.e(TAG, "API returned error: $errorMsg")
+                    ResultState.Success(
+                        ProductListResponse(
+                            products = emptyList(),
+                            pagination = PaginationResp(
+                                currentPage = page,
+                                pageSize = pageSize,
+                                totalPages = 0,
+                                totalItems = 0
+                            )
+                        )
+                    )
+                }
+            } else {
+                var errorMessage = "HTTP ${response.code()}: Failed to fetch products"
+                try {
+                    val errorBody = response.errorBody()?.string()
+                    if (errorBody != null) {
+                        val errorResponse = gson.fromJson(errorBody, ApiResponse::class.java)
+                        if (errorResponse.message != null) {
+                            errorMessage = errorResponse.message
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error parsing error response", e)
+                }
+                Log.e(TAG, "Failed to fetch products: $errorMessage")
+                ResultState.Success(
+                    ProductListResponse(
+                        products = emptyList(),
+                        pagination = PaginationResp(
+                            currentPage = page,
+                            pageSize = pageSize,
+                            totalPages = 0,
+                            totalItems = 0
+                        )
+                    )
+                )
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception fetching products", e)
             ResultState.Success(
-                ProductsResponse(
-                    products = filtered,
-                    total = filtered.size,
-                    page = page,
-                    perPage = 20
+                ProductListResponse(
+                    products = emptyList(),
+                    pagination = PaginationResp(
+                        currentPage = page,
+                        pageSize = pageSize,
+                        totalPages = 0,
+                        totalItems = 0
+                    )
                 )
             )
-        } catch (e: Exception) {
-            ResultState.Error(e.message ?: "Unknown error")
-        }
-    }
-
-    suspend fun getProductDetail(productId: Int): ResultState<ProductDetail> {
-        return try {
-            delay(400)
-            ResultState.Success(MockDataProvider.getMockProductDetail(productId))
-        } catch (e: Exception) {
-            ResultState.Error(e.message ?: "Unknown error")
         }
     }
 
     suspend fun getCart(): ResultState<CartResponse> {
         return try {
-            delay(300)
-            ResultState.Success(MockDataProvider.getMockCartResponse())
-        } catch (e: Exception) {
-            ResultState.Error(e.message ?: "Unknown error")
-        }
-    }
-
-    suspend fun getCheckoutQuote(): ResultState<CheckoutQuoteResponse> {
-        return try {
-            delay(300)
-            ResultState.Success(MockDataProvider.getMockCheckoutQuote())
-        } catch (e: Exception) {
-            ResultState.Error(e.message ?: "Unknown error")
-        }
-    }
-
-    suspend fun addToCart(productId: Int, quantity: Int): ResultState<CartItem> {
-        return try {
-            delay(300)
-            val product = MockDataProvider.getMockProducts().find { it.id == productId }
-            if (product != null) {
-                ResultState.Success(
-                    CartItem(
-                        id = System.currentTimeMillis().toInt(),
-                        productId = product.id,
-                        productName = product.name,
-                        variantId = null,
-                        quantity = quantity,
-                        price = product.price,
-                        subtotal = product.price * quantity,
-                        imageUrl = product.imageUrl
-                    )
+            Log.d(TAG, "Fetching cart")
+            // Mock data for now - backend cart API can be integrated later
+            ResultState.Success(
+                CartResponse(
+                    items = emptyList(),
+                    subtotal = 0.0,
+                    discount = null,
+                    voucherCode = null,
+                    total = 0.0
                 )
-            } else {
-                ResultState.Error("Product not found")
-            }
+            )
         } catch (e: Exception) {
+            Log.e(TAG, "Error fetching cart", e)
             ResultState.Error(e.message ?: "Unknown error")
         }
     }
 
     suspend fun removeFromCart(itemId: Int): ResultState<Unit> {
         return try {
-            delay(300)
+            Log.d(TAG, "Removing item from cart: $itemId")
             ResultState.Success(Unit)
         } catch (e: Exception) {
+            Log.e(TAG, "Error removing from cart", e)
             ResultState.Error(e.message ?: "Unknown error")
         }
     }
 
     suspend fun applyVoucher(code: String): ResultState<CartResponse> {
         return try {
-            delay(300)
-            val currentCart = MockDataProvider.getMockCartResponse()
-            if (code == "SAVE10") {
-                ResultState.Success(
-                    currentCart.copy(
-                        discount = currentCart.subtotal * 0.1,
-                        voucherCode = code,
-                        total = currentCart.subtotal * 0.9
-                    )
-                )
-            } else {
-                ResultState.Error("Invalid voucher code")
-            }
+            Log.d(TAG, "Applying voucher: $code")
+            ResultState.Error("Invalid voucher code")
         } catch (e: Exception) {
+            Log.e(TAG, "Error applying voucher", e)
+            ResultState.Error(e.message ?: "Unknown error")
+        }
+    }
+
+    suspend fun getHome(): ResultState<HomeResponse> {
+        return try {
+            Log.d(TAG, "Fetching home data")
+            // Mock data for now - backend home API can be integrated later
+            ResultState.Success(
+                HomeResponse(
+                    banners = emptyList(),
+                    featuredCategories = emptyList(),
+                    featuredProducts = emptyList()
+                )
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Error fetching home", e)
+            ResultState.Error(e.message ?: "Unknown error")
+        }
+    }
+
+    suspend fun getProductDetail(productId: Int): ResultState<ProductDetail> {
+        return try {
+            Log.d(TAG, "Fetching product detail: $productId")
+            // Mock data for now
+            ResultState.Success(
+                ProductDetail(
+                    id = productId,
+                    name = "Product $productId",
+                    description = "Product description",
+                    price = 100.0,
+                    images = emptyList(),
+                    rating = 4.5,
+                    reviewCount = 0
+                )
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Error fetching product detail", e)
+            ResultState.Error(e.message ?: "Unknown error")
+        }
+    }
+
+    suspend fun addToCart(productId: Int, quantity: Int): ResultState<CartItem> {
+        return try {
+            Log.d(TAG, "Adding to cart: productId=$productId, quantity=$quantity")
+            ResultState.Success(
+                CartItem(
+                    id = productId,
+                    productId = productId,
+                    productName = "Product $productId",
+                    quantity = quantity,
+                    price = 100.0,
+                    subtotal = 100.0 * quantity,
+                    imageUrl = ""
+                )
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Error adding to cart", e)
+            ResultState.Error(e.message ?: "Unknown error")
+        }
+    }
+
+    suspend fun getCheckoutQuote(): ResultState<CheckoutQuoteResponse> {
+        return try {
+            Log.d(TAG, "Fetching checkout quote")
+            ResultState.Success(
+                CheckoutQuoteResponse(
+                    subtotal = 0.0,
+                    shippingFee = 0.0,
+                    discount = 0.0,
+                    tax = 0.0,
+                    total = 0.0
+                )
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Error fetching checkout quote", e)
             ResultState.Error(e.message ?: "Unknown error")
         }
     }

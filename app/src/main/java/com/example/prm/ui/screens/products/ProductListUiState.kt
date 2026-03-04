@@ -11,5 +11,6 @@ data class ProductListUiState(
     val searchQuery: String = "",
     val selectedCategoryId: Int? = null,
     val sortBy: String = "latest",
-    val currentPage: Int = 1
+    val currentPage: Int = 1,
+    val totalPages: Int = 1
 )
