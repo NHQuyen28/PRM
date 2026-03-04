@@ -37,9 +37,19 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val isLoggedOut by viewModel.isLoggedOut.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.loadHome()
+    }
+
+    // Handle logout navigation
+    LaunchedEffect(isLoggedOut) {
+        if (isLoggedOut) {
+            navController.navigate("login") {
+                popUpTo("home") { inclusive = true }
+            }
+        }
     }
 
     Box(
@@ -52,7 +62,7 @@ fun HomeScreen(
         ) {
             // Header
             item {
-                HomeHeader(navController)
+                HomeHeader(navController, onLogout = { viewModel.logout() })
             }
 
             // Banner Carousel
@@ -100,7 +110,10 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HomeHeader(navController: NavHostController) {
+private fun HomeHeader(
+    navController: NavHostController,
+    onLogout: () -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -109,7 +122,7 @@ private fun HomeHeader(navController: NavHostController) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 "Badmini",
                 color = Color.White,
@@ -122,16 +135,30 @@ private fun HomeHeader(navController: NavHostController) {
                 fontSize = 12.sp
             )
         }
-        Icon(
-            Icons.Default.ShoppingCart,
-            contentDescription = "Cart",
-            tint = Color.White,
-            modifier = Modifier
-                .size(28.dp)
-                .clickable {
-                    navController.navigate("cart")
-                }
-        )
+        
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Button(
+                onClick = onLogout,
+                modifier = Modifier.height(36.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.8f))
+            ) {
+                Text("Logout", fontSize = 12.sp, color = Color.White)
+            }
+            
+            Icon(
+                Icons.Default.ShoppingCart,
+                contentDescription = "Cart",
+                tint = Color.White,
+                modifier = Modifier
+                    .size(28.dp)
+                    .clickable {
+                        navController.navigate("cart")
+                    }
+            )
+        }
     }
 }
 

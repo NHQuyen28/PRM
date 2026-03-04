@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import android.util.Log
 
 class ProductListViewModel : ViewModel() {
     private val repository = ProductRepository()
@@ -16,43 +17,48 @@ class ProductListViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(ProductListUiState())
     val uiState: StateFlow<ProductListUiState> = _uiState.asStateFlow()
 
+    companion object {
+        private const val TAG = "ProductListViewModel"
+    }
+
     init {
-        loadCategories()
         loadProducts()
     }
 
-    private fun loadCategories() {
+    fun loadProducts(page: Int = 1) {
         viewModelScope.launch {
-            when (val result = repository.getCategories()) {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            Log.d(TAG, "Loading products page: $page")
+            
+            when (val result = repository.getProducts(page = page, pageSize = 20)) {
                 is ResultState.Success -> {
-                    _uiState.update { it.copy(categories = result.data) }
-                }
-                is ResultState.Error -> {
-                    _uiState.update { it.copy(errorMessage = result.message) }
-                }
-                is ResultState.Loading -> {}
-            }
-        }
-    }
-
-    fun loadProducts() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            val state = _uiState.value
-            when (val result = repository.getProducts(
-                search = if (state.searchQuery.isNotEmpty()) state.searchQuery else null,
-                categoryId = state.selectedCategoryId,
-                page = state.currentPage
-            )) {
-                is ResultState.Success -> {
+                    val products = result.data.products.mapIndexed { index, resp ->
+                        com.example.prm.data.remote.dto.Product(
+                            id = index + 1, // Use index as ID for now
+                            name = resp.productName,
+                            description = resp.description,
+                            price = resp.basePrice,
+                            originalPrice = null,
+                            imageUrl = resp.images?.firstOrNull { it.isPrimary }?.imageUrl ?: "",
+                            rating = null,
+                            reviewCount = null,
+                            brandId = 1,
+                            categoryId = 1
+                        )
+                    }
+                    
+                    Log.d(TAG, "Products loaded: ${products.size} items")
                     _uiState.update {
                         it.copy(
-                            products = result.data.products,
-                            isLoading = false
+                            products = products,
+                            isLoading = false,
+                            currentPage = page,
+                            totalPages = result.data.pagination.totalPages
                         )
                     }
                 }
                 is ResultState.Error -> {
+                    Log.e(TAG, "Error loading products: ${result.message}")
                     _uiState.update {
                         it.copy(
                             errorMessage = result.message,
@@ -60,7 +66,9 @@ class ProductListViewModel : ViewModel() {
                         )
                     }
                 }
-                is ResultState.Loading -> {}
+                is ResultState.Loading -> {
+                    _uiState.update { it.copy(isLoading = true) }
+                }
             }
         }
     }

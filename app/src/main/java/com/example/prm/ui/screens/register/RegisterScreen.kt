@@ -16,21 +16,24 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.compose.ui.platform.LocalContext
 import com.example.prm.ui.theme.PurpleJobsly
+import com.example.prm.data.session.SessionManager
+import com.example.prm.ui.viewmodel.AuthViewModelFactory
 
 @Composable
 fun RegisterScreen(
     navController: NavHostController,
-    autoExpand: Boolean = true  // ✅ Thêm tham số này
+    autoExpand: Boolean = true
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-    var fullName by remember { mutableStateOf("") }
-
-    // ✅ Dùng autoExpand làm giá trị khởi tạo
+    val context = LocalContext.current
+    val sessionManager = SessionManager(context)
+    val viewModel: RegisterViewModel = viewModel(
+        factory = AuthViewModelFactory(sessionManager)
+    )
+    val uiState by viewModel.uiState.collectAsState()
     var isExpanded by remember { mutableStateOf(autoExpand) }
 
     val offsetY by animateDpAsState(
@@ -141,8 +144,8 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 OutlinedTextField(
-                    value = fullName,
-                    onValueChange = { fullName = it },
+                    value = uiState.fullName,
+                    onValueChange = { viewModel.onFullNameChange(it) },
                     label = { Text("Full Name") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -155,8 +158,8 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
+                    value = uiState.email,
+                    onValueChange = { viewModel.onEmailChange(it) },
                     label = { Text("Email Address") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -169,8 +172,8 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
+                    value = uiState.password,
+                    onValueChange = { viewModel.onPasswordChange(it) },
                     label = { Text("Password") },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
@@ -184,8 +187,8 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
-                    value = confirmPassword,
-                    onValueChange = { confirmPassword = it },
+                    value = uiState.confirmPassword,
+                    onValueChange = { viewModel.onConfirmPasswordChange(it) },
                     label = { Text("Confirm Password") },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
@@ -196,25 +199,61 @@ fun RegisterScreen(
                     )
                 )
 
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = uiState.phone,
+                    onValueChange = { viewModel.onPhoneChange(it) },
+                    label = { Text("Phone Number (Optional)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PurpleJobsly,
+                        focusedLabelColor = PurpleJobsly
+                    )
+                )
+
+                uiState.errorMessage?.let {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = it,
+                        color = Color.Red,
+                        fontSize = 14.sp
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Button(
-                    onClick = {
-                        navController.navigate("home") { popUpTo("register") { inclusive = true } }
-                    },
+                    onClick = { viewModel.register() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = PurpleJobsly
-                    )
+                    ),
+                    enabled = !uiState.isLoading
                 ) {
-                    Text(
-                        "Create Account",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    if (uiState.isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    } else {
+                        Text(
+                            "Create Account",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
+                // Handle navigation after successful registration
+                LaunchedEffect(uiState.registerSuccess) {
+                    if (uiState.registerSuccess) {
+                        navController.navigate("home") { popUpTo("register") { inclusive = true } }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))

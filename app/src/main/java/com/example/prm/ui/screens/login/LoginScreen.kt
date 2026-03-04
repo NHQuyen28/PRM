@@ -20,15 +20,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.compose.ui.platform.LocalContext
 import com.example.prm.ui.theme.PurpleJobsly
+import com.example.prm.data.session.SessionManager
+import com.example.prm.ui.viewmodel.AuthViewModelFactory
 import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
     navController: NavHostController,
-    viewModel: LoginViewModel = viewModel(),
     autoExpand: Boolean = false  // ✅ Thêm tham số này
 ) {
+    val context = LocalContext.current
+    val sessionManager = SessionManager(context)
+    val viewModel: LoginViewModel = viewModel(
+        factory = AuthViewModelFactory(sessionManager)
+    )
     val uiState by viewModel.uiState.collectAsState()
 
     // ✅ Dùng autoExpand làm giá trị khởi tạo
@@ -184,7 +191,6 @@ fun LoginScreen(
                 Button(
                     onClick = { 
                         viewModel.login()
-                        navController.navigate("home") { popUpTo("login") { inclusive = true } }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -206,6 +212,13 @@ fun LoginScreen(
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold
                         )
+                    }
+                }
+
+                // Handle navigation after successful login
+                LaunchedEffect(uiState.loginSuccess) {
+                    if (uiState.loginSuccess) {
+                        navController.navigate("home") { popUpTo("login") { inclusive = true } }
                     }
                 }
 
