@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
@@ -119,6 +120,7 @@ fun HomeScreen(
     }
 }
 
+
 @Composable
 private fun HomeHeader(
     navController: NavHostController,
@@ -150,13 +152,13 @@ private fun HomeHeader(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Button(
-                onClick = onLogout,
-                modifier = Modifier.height(36.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.8f))
-            ) {
-                Text("Logout", fontSize = 12.sp, color = Color.White)
-            }
+//            Button(
+//                onClick = onLogout,
+//                modifier = Modifier.height(36.dp),
+//                colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.8f))
+//            ) {
+//                Text("Logout", fontSize = 12.sp, color = Color.White)
+//            }
             
             Icon(
                 Icons.Default.ShoppingCart,
@@ -166,6 +168,17 @@ private fun HomeHeader(
                     .size(28.dp)
                     .clickable {
                         navController.navigate("cart")
+                    }
+            )
+
+            Icon(
+                Icons.Default.Person,
+                contentDescription = "Profile",
+                tint = Color.White,
+                modifier = Modifier
+                    .size(28.dp)
+                    .clickable {
+                        navController.navigate("profile")
                     }
             )
         }

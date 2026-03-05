@@ -3,6 +3,7 @@ package com.example.prm.data.session
 import android.content.Context
 import android.content.SharedPreferences
 import com.example.prm.data.remote.dto.AuthResponse
+import com.example.prm.utils.TokenManager
 
 class SessionManager(context: Context) {
     private val sharedPref: SharedPreferences = context.getSharedPreferences(
@@ -35,6 +36,8 @@ class SessionManager(context: Context) {
             putString(KEY_AVATAR, authResponse.user.avatarUrl)
             putString(KEY_ROLE, authResponse.user.role)
         }.apply()
+
+        TokenManager.saveToken(authResponse.accessToken)
     }
 
     fun saveToken(token: String) {
@@ -67,6 +70,7 @@ class SessionManager(context: Context) {
 
     fun logout() {
         sharedPref.edit().clear().apply()
+        TokenManager.clear()
     }
 
     fun isLoggedIn(): Boolean = getAccessToken() != null

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import android.util.Log
+import com.example.prm.utils.TokenManager
 
 class LoginViewModel(
     private val authRepository: AuthRepository = AuthRepository(),
@@ -63,6 +64,7 @@ class LoginViewModel(
                         Log.d(TAG, "Login success, saving token...")
                         // Save auth response to session
                         sessionManager?.saveAuthResponse(result.data)
+                        TokenManager.saveToken(result.data.accessToken)
                         Log.d(TAG, "Token saved, updating UI")
                         _uiState.update { 
                             it.copy(
