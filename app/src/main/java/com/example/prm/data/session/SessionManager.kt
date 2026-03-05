@@ -20,6 +20,7 @@ class SessionManager(context: Context) {
         private const val KEY_NAME = "full_name"
         private const val KEY_PHONE = "phone"
         private const val KEY_AVATAR = "avatar"
+        private const val KEY_ROLE = "user_role"
     }
 
     fun saveAuthResponse(authResponse: AuthResponse) {
@@ -33,6 +34,7 @@ class SessionManager(context: Context) {
             putString(KEY_NAME, authResponse.user.fullName)
             putString(KEY_PHONE, authResponse.user.phone)
             putString(KEY_AVATAR, authResponse.user.avatarUrl)
+            putString(KEY_ROLE, authResponse.user.role)
         }.apply()
 
         TokenManager.saveToken(authResponse.accessToken)
@@ -60,6 +62,11 @@ class SessionManager(context: Context) {
     fun getName(): String? = sharedPref.getString(KEY_NAME, null)
     fun getPhone(): String? = sharedPref.getString(KEY_PHONE, null)
     fun getAvatar(): String? = sharedPref.getString(KEY_AVATAR, null)
+    fun getRole(): String? = sharedPref.getString(KEY_ROLE, null)
+    fun isAdmin(): Boolean {
+        val role = getRole() ?: return false
+        return role.lowercase() == "admin" || role == "1" || role.lowercase().contains("admin")
+    }
 
     fun logout() {
         sharedPref.edit().clear().apply()

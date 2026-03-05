@@ -2,6 +2,17 @@ package com.example.prm.data.remote.dto
 
 import com.google.gson.annotations.SerializedName
 
+data class ApiResponseWrapper<T>(
+    @SerializedName("success")
+    val success: Boolean,
+    @SerializedName("code")
+    val code: Int,
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("data")
+    val data: T?
+)
+
 data class AuthResponse(
     @SerializedName("accessToken")
     val accessToken: String,
@@ -26,12 +37,8 @@ data class UserInfo(
     val phone: String? = null,
     @SerializedName("avatarUrl")
     val avatarUrl: String? = null,
-    @SerializedName("role")
-    val role: String,
     @SerializedName("roleDisplay")
-    val roleDisplay: String,
-    @SerializedName("status")
-    val status: String,
+    val role: String,
     @SerializedName("statusDisplay")
-    val statusDisplay: String
+    val status: String
 )

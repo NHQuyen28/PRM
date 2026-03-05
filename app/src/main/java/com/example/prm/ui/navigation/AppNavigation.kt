@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.prm.data.remote.RetrofitClient
 import com.example.prm.data.session.SessionManager
 import com.example.prm.ui.screens.cart.CartScreen
 import com.example.prm.ui.screens.login.LoginScreen
@@ -15,6 +16,9 @@ import com.example.prm.ui.screens.home.HomeScreen
 import com.example.prm.ui.screens.products.ProductListScreen
 import com.example.prm.ui.screens.product_detail.ProductDetailScreen
 import com.example.prm.ui.screens.checkout.CheckoutScreen
+import com.example.prm.ui.screens.admin.AdminDashboardScreen
+import com.example.prm.ui.screens.admin.AdminAddProductScreen
+import com.example.prm.ui.screens.admin.AdminEditProductScreen
 import com.example.prm.ui.screens.profile.ProfileScreen
 
 @Composable
@@ -24,6 +28,10 @@ fun AppNavigation() {
     // Check if user is already logged in
     val context = LocalContext.current
     val sessionManager = SessionManager(context)
+
+    // Initialize Retrofit with the current session so that all API calls use the token
+    RetrofitClient.initSessionManager(sessionManager)
+
     val startDestination = if (sessionManager.isLoggedIn()) "home" else "login"
 
     NavHost(
@@ -77,17 +85,18 @@ fun AppNavigation() {
                     nullable = true
                 },
                 navArgument("categoryId") {
-                    type = NavType.IntType
-                    defaultValue = -1
+                    type = NavType.StringType
+                    defaultValue = null
+                    nullable = true
                 }
             )
         ) { backStackEntry ->
             val search = backStackEntry.arguments?.getString("search")
-            val categoryId = backStackEntry.arguments?.getInt("categoryId")
+            val categoryId = backStackEntry.arguments?.getString("categoryId")
             ProductListScreen(
                 navController = navController,
                 initialSearch = search,
-                initialCategoryId = if (categoryId == -1) null else categoryId
+                initialCategoryId = categoryId
             )
         }
 
@@ -95,11 +104,11 @@ fun AppNavigation() {
             route = "product_detail/{productId}",
             arguments = listOf(
                 navArgument("productId") {
-                    type = NavType.IntType
+                    type = NavType.StringType
                 }
             )
         ) { backStackEntry ->
-            val productId = backStackEntry.arguments?.getInt("productId") ?: 0
+            val productId = backStackEntry.arguments?.getString("productId") ?: ""
             ProductDetailScreen(
                 productId = productId,
                 navController = navController
@@ -111,6 +120,29 @@ fun AppNavigation() {
             CheckoutScreen(navController = navController)
         }
 
+        // Admin screens
+        composable(route = "admin_dashboard") {
+            AdminDashboardScreen(navController = navController)
+        }
+
+        composable(route = "admin_add_product") {
+            AdminAddProductScreen(navController = navController)
+        }
+
+        composable(
+            route = "admin_edit_product/{productId}",
+            arguments = listOf(
+                navArgument("productId") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val productId = backStackEntry.arguments?.getString("productId") ?: ""
+            AdminEditProductScreen(
+                productId = productId,
+                navController = navController
+            )
+        }
         composable("profile") {
             ProfileScreen(navController)
         }

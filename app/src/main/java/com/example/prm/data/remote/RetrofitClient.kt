@@ -1,6 +1,7 @@
 package com.example.prm.data.remote
 
-import com.google.gson.Gson
+import com.example.prm.data.session.SessionManager
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -17,8 +18,29 @@ object RetrofitClient {
     // For real device: https://YOUR_MACHINE_IP:5001/api/
     private const val BASE_URL = "http://10.0.2.2:5000/api/"
 
+    // Will be initialized from the app layer so that we can attach tokens
+    @Volatile
+    var sessionManager: SessionManager? = null
+
+    fun initSessionManager(manager: SessionManager) {
+        sessionManager = manager
+    }
+
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
+    }
+
+    // Interceptor to automatically add Authorization header if token exists
+    private val authInterceptor = Interceptor { chain ->
+        val originalRequest = chain.request()
+        val token = sessionManager?.getAccessToken()
+
+        val newRequestBuilder = originalRequest.newBuilder()
+        if (!token.isNullOrBlank()) {
+            newRequestBuilder.addHeader("Authorization", "Bearer $token")
+        }
+
+        chain.proceed(newRequestBuilder.build())
     }
 
     // Create a trust manager that accepts all certificates (for development only)
@@ -36,7 +58,7 @@ object RetrofitClient {
     }
 
     private val httpClient = OkHttpClient.Builder()
-        .addInterceptor(AuthInterceptor())
+        .addInterceptor(authInterceptor)
         .addInterceptor(loggingInterceptor)
         .sslSocketFactory(sslContext.socketFactory, trustAllCerts[0] as X509TrustManager)
         .hostnameVerifier { _, _ -> true }

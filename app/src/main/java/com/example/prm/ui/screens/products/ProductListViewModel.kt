@@ -34,7 +34,7 @@ class ProductListViewModel : ViewModel() {
                 is ResultState.Success -> {
                     val products = result.data.products.mapIndexed { index, resp ->
                         com.example.prm.data.remote.dto.Product(
-                            id = index + 1, // Use index as ID for now
+                            id = (index + 1).toString(),
                             name = resp.productName,
                             description = resp.description,
                             price = resp.basePrice,
@@ -42,8 +42,8 @@ class ProductListViewModel : ViewModel() {
                             imageUrl = resp.images?.firstOrNull { it.isPrimary }?.imageUrl ?: "",
                             rating = null,
                             reviewCount = null,
-                            brandId = 1,
-                            categoryId = 1
+                            brandId = resp.brandId,
+                            categoryId = resp.categoryId
                         )
                     }
                     
@@ -78,7 +78,7 @@ class ProductListViewModel : ViewModel() {
         loadProducts()
     }
 
-    fun onCategorySelect(categoryId: Int?) {
+    fun onCategorySelect(categoryId: String?) {
         _uiState.update { it.copy(selectedCategoryId = categoryId, currentPage = 1) }
         loadProducts()
     }

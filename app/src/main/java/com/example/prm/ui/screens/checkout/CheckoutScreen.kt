@@ -9,7 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -279,7 +279,7 @@ private fun OrderSummarySection(quote: com.example.prm.data.remote.dto.CheckoutQ
                 }
             }
 
-            HorizontalDivider(
+            Divider(
                 modifier = Modifier.padding(vertical = 8.dp),
                 color = Color.Gray.copy(alpha = 0.3f)
             )
