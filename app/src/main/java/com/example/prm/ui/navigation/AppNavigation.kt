@@ -8,13 +8,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.prm.data.session.SessionManager
+import com.example.prm.ui.screens.cart.CartScreen
 import com.example.prm.ui.screens.login.LoginScreen
 import com.example.prm.ui.screens.register.RegisterScreen
 import com.example.prm.ui.screens.home.HomeScreen
 import com.example.prm.ui.screens.products.ProductListScreen
 import com.example.prm.ui.screens.product_detail.ProductDetailScreen
-import com.example.prm.ui.screens.cart.CartScreen
 import com.example.prm.ui.screens.checkout.CheckoutScreen
+import com.example.prm.ui.screens.profile.ProfileScreen
 
 @Composable
 fun AppNavigation() {
@@ -105,12 +106,18 @@ fun AppNavigation() {
             )
         }
 
-        composable(route = "cart") {
-            CartScreen(navController = navController)
-        }
 
         composable(route = "checkout") {
             CheckoutScreen(navController = navController)
         }
+
+        composable("profile") {
+            ProfileScreen(navController)
+        }
+
+        composable("cart") {
+            CartScreen(navController)
+        }
+
     }
 }

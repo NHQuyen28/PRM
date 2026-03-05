@@ -2,88 +2,69 @@ package com.example.prm.ui.screens.cart
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.prm.data.repository.ProductRepository
+import com.example.prm.data.repository.CartRepository
 import com.example.prm.utils.ResultState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class CartViewModel : ViewModel() {
-    private val repository = ProductRepository()
 
-    private val _uiState = MutableStateFlow(CartUiState())
-    val uiState: StateFlow<CartUiState> = _uiState.asStateFlow()
+    private val repository = CartRepository()
 
-    init {
-        loadCart()
-    }
+    private val _uiState = MutableStateFlow(CartUiState(isLoading = true))
+    val uiState: StateFlow<CartUiState> = _uiState
 
     fun loadCart() {
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+
+            _uiState.value = CartUiState(isLoading = true)
+
             when (val result = repository.getCart()) {
+
                 is ResultState.Success -> {
-                    _uiState.update {
-                        it.copy(
-                            items = result.data.items,
-                            subtotal = result.data.subtotal,
-                            discount = result.data.discount ?: 0.0,
-                            voucherCode = result.data.voucherCode,
-                            total = result.data.total,
-                            isLoading = false
-                        )
-                    }
+                    _uiState.value = CartUiState(cart = result.data)
                 }
+
                 is ResultState.Error -> {
-                    _uiState.update {
-                        it.copy(
-                            errorMessage = result.message,
-                            isLoading = false
-                        )
-                    }
+                    _uiState.value = CartUiState(error = result.message)
                 }
-                is ResultState.Loading -> {}
+
+                else -> {}
             }
         }
     }
 
-    fun removeItem(itemId: Int) {
-        viewModelScope.launch {
-            repository.removeFromCart(itemId)
-            loadCart()
-        }
-    }
+    fun updateQuantity(
+        cartItemId: String,
+        quantity: Int
+    ) {
 
-    fun applyVoucher() {
+        val currentCart = _uiState.value.cart ?: return
+
+        val updatedItems = currentCart.items.map {
+            if (it.id == cartItemId) it.copy(quantity = quantity)
+            else it
+        }
+
+        val updatedCart = currentCart.copy(
+            items = updatedItems,
+            subtotal = updatedItems.sumOf { it.unitPrice * it.quantity }
+        )
+
+        // UI UPDATE NGAY
+        _uiState.value = _uiState.value.copy(cart = updatedCart)
+
+        // CALL API BACKGROUND
         viewModelScope.launch {
-            val code = _uiState.value.voucherInput
-            if (code.isNotEmpty()) {
-                when (val result = repository.applyVoucher(code)) {
-                    is ResultState.Success -> {
-                        _uiState.update {
-                            it.copy(
-                                subtotal = result.data.subtotal,
-                                discount = result.data.discount ?: 0.0,
-                                voucherCode = result.data.voucherCode,
-                                total = result.data.total,
-                                voucherInput = ""
-                            )
-                        }
-                    }
-                    is ResultState.Error -> {
-                        _uiState.update {
-                            it.copy(errorMessage = result.message)
-                        }
-                    }
-                    is ResultState.Loading -> {}
-                }
+
+            val result = repository.updateCart(cartItemId, quantity)
+
+            if (result is ResultState.Error) {
+                loadCart() // rollback
             }
         }
     }
 
-    fun updateVoucherInput(code: String) {
-        _uiState.update { it.copy(voucherInput = code) }
-    }
 }
