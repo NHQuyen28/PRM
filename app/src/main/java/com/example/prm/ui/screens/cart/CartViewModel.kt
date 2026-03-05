@@ -49,7 +49,7 @@ class CartViewModel : ViewModel() {
         }
     }
 
-    fun removeItem(itemId: Int) {
+    fun removeItem(itemId: String) {
         viewModelScope.launch {
             repository.removeFromCart(itemId)
             loadCart()

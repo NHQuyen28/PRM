@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 
 class ProductDetailViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
     private val repository = ProductRepository()
-    private val productId: Int = savedStateHandle["productId"] ?: 0
+    private val productId: String = savedStateHandle["productId"] ?: "0"
 
     private val _uiState = MutableStateFlow(ProductDetailUiState())
     val uiState: StateFlow<ProductDetailUiState> = _uiState.asStateFlow()
@@ -47,11 +47,11 @@ class ProductDetailViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
         }
     }
 
-    fun selectVariant(variantId: Int) {
+    fun selectVariant(variantId: String) {
         _uiState.update { it.copy(selectedVariantId = variantId) }
     }
 
-    fun toggleAddon(addonId: Int) {
+    fun toggleAddon(addonId: String) {
         _uiState.update {
             val newAddons = it.selectedAddons.toMutableList()
             if (newAddons.contains(addonId)) {

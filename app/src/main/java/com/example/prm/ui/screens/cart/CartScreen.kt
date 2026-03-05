@@ -10,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,7 +23,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.compose.ui.tooling.preview.Preview
 import coil.compose.AsyncImage
-import androidx.compose.material3.HorizontalDivider
 import com.example.prm.data.remote.dto.CartItem
 import com.example.prm.ui.theme.PurpleJobsly
 
@@ -283,7 +281,7 @@ private fun CartSummary(
                 }
             }
 
-            HorizontalDivider(
+            Divider(
                 modifier = Modifier.padding(vertical = 8.dp),
                 color = Color.Gray.copy(alpha = 0.3f)
             )

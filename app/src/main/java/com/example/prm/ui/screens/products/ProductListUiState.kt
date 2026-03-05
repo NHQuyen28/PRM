@@ -9,7 +9,7 @@ data class ProductListUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val searchQuery: String = "",
-    val selectedCategoryId: Int? = null,
+    val selectedCategoryId: String? = null,
     val sortBy: String = "latest",
     val currentPage: Int = 1,
     val totalPages: Int = 1

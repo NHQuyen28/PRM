@@ -28,8 +28,10 @@ import coil.compose.AsyncImage
 import com.example.prm.data.remote.dto.Banner
 import com.example.prm.data.remote.dto.Category
 import com.example.prm.data.remote.dto.Product
+import com.example.prm.data.session.SessionManager
 import com.example.prm.ui.theme.PurpleJobsly
 import com.example.prm.ui.theme.PRMTheme
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun HomeScreen(
@@ -38,8 +40,16 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isLoggedOut by viewModel.isLoggedOut.collectAsState()
+    val context = LocalContext.current
+    val sessionManager = SessionManager(context)
 
     LaunchedEffect(Unit) {
+        // Check if user is admin and redirect
+        if (sessionManager.isAdmin()) {
+            navController.navigate("admin_dashboard") {
+                popUpTo("home") { inclusive = true }
+            }
+        }
         viewModel.loadHome()
     }
 

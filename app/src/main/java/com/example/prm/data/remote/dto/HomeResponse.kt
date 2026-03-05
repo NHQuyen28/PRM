@@ -13,7 +13,7 @@ data class HomeResponse(
 
 data class Banner(
     @SerializedName("id")
-    val id: Int,
+    val id: String,
     @SerializedName("image_url")
     val imageUrl: String,
     @SerializedName("title")
@@ -24,7 +24,7 @@ data class Banner(
 
 data class Category(
     @SerializedName("id")
-    val id: Int,
+    val id: String,
     @SerializedName("name")
     val name: String,
     @SerializedName("icon_url")
@@ -33,7 +33,7 @@ data class Category(
 
 data class Product(
     @SerializedName("id")
-    val id: Int,
+    val id: String,
     @SerializedName("name")
     val name: String,
     @SerializedName("description")
@@ -49,14 +49,14 @@ data class Product(
     @SerializedName("review_count")
     val reviewCount: Int? = null,
     @SerializedName("brand_id")
-    val brandId: Int? = null,
+    val brandId: String? = null,
     @SerializedName("category_id")
-    val categoryId: Int? = null
+    val categoryId: String? = null
 )
 
 data class Brand(
     @SerializedName("id")
-    val id: Int,
+    val id: String,
     @SerializedName("name")
     val name: String,
     @SerializedName("logo_url")
@@ -65,7 +65,7 @@ data class Brand(
 
 data class ProductDetail(
     @SerializedName("id")
-    val id: Int,
+    val id: String,
     @SerializedName("name")
     val name: String,
     @SerializedName("description")
@@ -88,7 +88,7 @@ data class ProductDetail(
 
 data class Variant(
     @SerializedName("id")
-    val id: Int,
+    val id: String,
     @SerializedName("name")
     val name: String,
     @SerializedName("value")
@@ -99,7 +99,7 @@ data class Variant(
 
 data class Addon(
     @SerializedName("id")
-    val id: Int,
+    val id: String,
     @SerializedName("name")
     val name: String,
     @SerializedName("price")
@@ -121,13 +121,13 @@ data class ProductsResponse(
 
 data class CartItem(
     @SerializedName("id")
-    val id: Int,
+    val id: String,
     @SerializedName("product_id")
-    val productId: Int,
+    val productId: String,
     @SerializedName("product_name")
     val productName: String,
     @SerializedName("variant_id")
-    val variantId: Int? = null,
+    val variantId: String? = null,
     @SerializedName("quantity")
     val quantity: Int,
     @SerializedName("price")
@@ -149,6 +149,46 @@ data class CartResponse(
     val voucherCode: String? = null,
     @SerializedName("total")
     val total: Double
+)
+
+// For Category API response
+data class CategoryResponse(
+    @SerializedName("categories")
+    val categories: List<CategoryApi>,
+    @SerializedName("pagination")
+    val pagination: Any? = null
+)
+
+data class CategoryApi(
+    @SerializedName("id")
+    val id: String,
+    @SerializedName("categoryName")
+    val name: String,
+    @SerializedName("slug")
+    val slug: String,
+    @SerializedName("description")
+    val description: String? = null,
+    @SerializedName("imageUrl")
+    val imageUrl: String? = null
+)
+
+// For Brand API response
+data class BrandResponse(
+    @SerializedName("brands")
+    val brands: List<BrandApi>,
+    @SerializedName("pagination")
+    val pagination: Any? = null
+)
+
+data class BrandApi(
+    @SerializedName("id")
+    val id: String,
+    @SerializedName("brandName")
+    val name: String,
+    @SerializedName("slug")
+    val slug: String,
+    @SerializedName("description")
+    val description: String? = null
 )
 
 data class CheckoutQuoteResponse(

@@ -1,6 +1,8 @@
 package com.example.prm.data.repository
 
+import com.example.prm.data.remote.api.CreateProductRequest
 import com.example.prm.data.remote.api.ProductApi
+import com.example.prm.data.remote.api.UpdateProductRequest
 import com.example.prm.data.remote.dto.*
 import com.example.prm.data.remote.RetrofitClient
 import com.example.prm.utils.ResultState
@@ -14,7 +16,7 @@ class ProductRepository {
     companion object {
         private const val TAG = "ProductRepository"
     }
-
+    
     suspend fun getProducts(
         page: Int = 1,
         pageSize: Int = 20
@@ -31,17 +33,7 @@ class ProductRepository {
                 } else {
                     val errorMsg = apiResponse.message ?: "Failed to fetch products"
                     Log.e(TAG, "API returned error: $errorMsg")
-                    ResultState.Success(
-                        ProductListResponse(
-                            products = emptyList(),
-                            pagination = PaginationResp(
-                                currentPage = page,
-                                pageSize = pageSize,
-                                totalPages = 0,
-                                totalItems = 0
-                            )
-                        )
-                    )
+                    ResultState.Error(errorMsg)
                 }
             } else {
                 var errorMessage = "HTTP ${response.code()}: Failed to fetch products"
@@ -57,31 +49,188 @@ class ProductRepository {
                     Log.e(TAG, "Error parsing error response", e)
                 }
                 Log.e(TAG, "Failed to fetch products: $errorMessage")
-                ResultState.Success(
-                    ProductListResponse(
-                        products = emptyList(),
-                        pagination = PaginationResp(
-                            currentPage = page,
-                            pageSize = pageSize,
-                            totalPages = 0,
-                            totalItems = 0
-                        )
-                    )
-                )
+                ResultState.Error(errorMessage)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Exception fetching products", e)
-            ResultState.Success(
-                ProductListResponse(
-                    products = emptyList(),
-                    pagination = PaginationResp(
-                        currentPage = page,
-                        pageSize = pageSize,
-                        totalPages = 0,
-                        totalItems = 0
-                    )
-                )
+            ResultState.Error(e.message ?: "Connection error")
+        }
+    }
+
+    suspend fun getProductById(productId: String): ResultState<ProductResp> {
+        return try {
+            Log.d(TAG, "Fetching product by id: $productId")
+            val response = productApi.getProductById(productId)
+
+            if (response.isSuccessful && response.body() != null) {
+                val apiResponse = response.body()!!
+                if (apiResponse.success && apiResponse.data != null) {
+                    ResultState.Success(apiResponse.data)
+                } else {
+                    val errorMsg = apiResponse.message ?: "Failed to load product"
+                    Log.e(TAG, "API returned error: $errorMsg")
+                    ResultState.Error(errorMsg)
+                }
+            } else {
+                var errorMessage = "HTTP ${response.code()}: Failed to load product"
+                try {
+                    val errorBody = response.errorBody()?.string()
+                    if (errorBody != null) {
+                        val errorResponse = gson.fromJson(errorBody, ApiResponse::class.java)
+                        if (errorResponse.message != null) {
+                            errorMessage = errorResponse.message
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error parsing error response", e)
+                }
+                Log.e(TAG, "Failed to load product: $errorMessage")
+                ResultState.Error(errorMessage)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception fetching product", e)
+            ResultState.Error(e.message ?: "Connection error")
+        }
+    }
+
+    suspend fun createProduct(
+        categoryId: String,
+        brandId: String,
+        productName: String,
+        slug: String?,
+        description: String?,
+        basePrice: Double,
+        isActive: Boolean = true
+    ): ResultState<ProductResp> {
+        return try {
+            Log.d(TAG, "Creating product: name=$productName")
+            val request = CreateProductRequest(
+                categoryId = categoryId,
+                brandId = brandId,
+                productName = productName,
+                slug = slug,
+                description = description,
+                basePrice = basePrice,
+                isActive = isActive,
+                variants = null,
+                imageUrls = null
             )
+
+            val response = productApi.createProduct(request)
+
+            if (response.isSuccessful && response.body() != null) {
+                val apiResponse = response.body()!!
+                if (apiResponse.success && apiResponse.data != null) {
+                    ResultState.Success(apiResponse.data)
+                } else {
+                    val errorMsg = apiResponse.message ?: "Failed to create product"
+                    Log.e(TAG, "API returned error: $errorMsg")
+                    ResultState.Error(errorMsg)
+                }
+            } else {
+                var errorMessage = "HTTP ${response.code()}: Failed to create product"
+                try {
+                    val errorBody = response.errorBody()?.string()
+                    if (errorBody != null) {
+                        val errorResponse = gson.fromJson(errorBody, ApiResponse::class.java)
+                        if (errorResponse.message != null) {
+                            errorMessage = errorResponse.message
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error parsing error response", e)
+                }
+                Log.e(TAG, "Failed to create product: $errorMessage")
+                ResultState.Error(errorMessage)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception creating product", e)
+            ResultState.Error(e.message ?: "Connection error")
+        }
+    }
+
+    suspend fun updateProduct(
+        id: String,
+        categoryId: String,
+        brandId: String,
+        productName: String,
+        slug: String?,
+        description: String?,
+        basePrice: Double,
+        isActive: Boolean
+    ): ResultState<ProductResp> {
+        return try {
+            Log.d(TAG, "Updating product: id=$id, name=$productName")
+            val request = UpdateProductRequest(
+                id = id,
+                categoryId = categoryId,
+                brandId = brandId,
+                productName = productName,
+                slug = slug,
+                description = description,
+                basePrice = basePrice,
+                isActive = isActive
+            )
+
+            val response = productApi.updateProduct(request)
+
+            if (response.isSuccessful && response.body() != null) {
+                val apiResponse = response.body()!!
+                if (apiResponse.success && apiResponse.data != null) {
+                    ResultState.Success(apiResponse.data)
+                } else {
+                    val errorMsg = apiResponse.message ?: "Failed to update product"
+                    Log.e(TAG, "API returned error: $errorMsg")
+                    ResultState.Error(errorMsg)
+                }
+            } else {
+                var errorMessage = "HTTP ${response.code()}: Failed to update product"
+                try {
+                    val errorBody = response.errorBody()?.string()
+                    if (errorBody != null) {
+                        val errorResponse = gson.fromJson(errorBody, ApiResponse::class.java)
+                        if (errorResponse.message != null) {
+                            errorMessage = errorResponse.message
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error parsing error response", e)
+                }
+                Log.e(TAG, "Failed to update product: $errorMessage")
+                ResultState.Error(errorMessage)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception updating product", e)
+            ResultState.Error(e.message ?: "Connection error")
+        }
+    }
+
+    suspend fun deleteProduct(productId: String): ResultState<Unit> {
+        return try {
+            Log.d(TAG, "Deleting product: id=$productId")
+            val response = productApi.deleteProduct(productId)
+
+            if (response.isSuccessful) {
+                ResultState.Success(Unit)
+            } else {
+                var errorMessage = "HTTP ${response.code()}: Failed to delete product"
+                try {
+                    val errorBody = response.errorBody()?.string()
+                    if (errorBody != null) {
+                        val errorResponse = gson.fromJson(errorBody, ApiResponse::class.java)
+                        if (errorResponse.message != null) {
+                            errorMessage = errorResponse.message
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error parsing error response", e)
+                }
+                Log.e(TAG, "Failed to delete product: $errorMessage")
+                ResultState.Error(errorMessage)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception deleting product", e)
+            ResultState.Error(e.message ?: "Connection error")
         }
     }
 
@@ -104,7 +253,7 @@ class ProductRepository {
         }
     }
 
-    suspend fun removeFromCart(itemId: Int): ResultState<Unit> {
+    suspend fun removeFromCart(itemId: String): ResultState<Unit> {
         return try {
             Log.d(TAG, "Removing item from cart: $itemId")
             ResultState.Success(Unit)
@@ -141,35 +290,26 @@ class ProductRepository {
         }
     }
 
-    suspend fun getProductDetail(productId: Int): ResultState<ProductDetail> {
+    suspend fun getProductDetail(productId: String): ResultState<ProductDetail> {
         return try {
             Log.d(TAG, "Fetching product detail: $productId")
-            // Mock data for now
-            ResultState.Success(
-                ProductDetail(
-                    id = productId,
-                    name = "Product $productId",
-                    description = "Product description",
-                    price = 100.0,
-                    images = emptyList(),
-                    rating = 4.5,
-                    reviewCount = 0
-                )
-            )
+            // Use mock data for now
+            ResultState.Success(MockDataProvider.getMockProductDetail(productId))
         } catch (e: Exception) {
             Log.e(TAG, "Error fetching product detail", e)
             ResultState.Error(e.message ?: "Unknown error")
         }
     }
 
-    suspend fun addToCart(productId: Int, quantity: Int): ResultState<CartItem> {
+    suspend fun addToCart(productId: String, quantity: Int): ResultState<CartItem> {
         return try {
             Log.d(TAG, "Adding to cart: productId=$productId, quantity=$quantity")
             ResultState.Success(
                 CartItem(
-                    id = productId,
+                    id = "cart-item-${System.currentTimeMillis()}",
                     productId = productId,
                     productName = "Product $productId",
+                    variantId = null,
                     quantity = quantity,
                     price = 100.0,
                     subtotal = 100.0 * quantity,

@@ -6,7 +6,7 @@ data class ProductDetailUiState(
     val product: ProductDetail? = null,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val selectedVariantId: Int? = null,
-    val selectedAddons: List<Int> = emptyList(),
+    val selectedVariantId: String? = null,
+    val selectedAddons: List<String> = emptyList(),
     val quantity: Int = 1
 )
