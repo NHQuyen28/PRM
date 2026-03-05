@@ -12,9 +12,10 @@ import javax.net.ssl.X509TrustManager
 
 object RetrofitClient {
     // Change this to your backend URL
-    private const val BASE_URL = "https://10.0.2.2:5001/api/"
+    //private const val BASE_URL = "https://10.0.2.2:5001/api/"
     // For localhost: https://10.0.2.2:5001/api/ (Android emulator - HTTPS)
     // For real device: https://YOUR_MACHINE_IP:5001/api/
+    private const val BASE_URL = "http://10.0.2.2:5000/api/"
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
@@ -35,6 +36,7 @@ object RetrofitClient {
     }
 
     private val httpClient = OkHttpClient.Builder()
+        .addInterceptor(AuthInterceptor())
         .addInterceptor(loggingInterceptor)
         .sslSocketFactory(sslContext.socketFactory, trustAllCerts[0] as X509TrustManager)
         .hostnameVerifier { _, _ -> true }
