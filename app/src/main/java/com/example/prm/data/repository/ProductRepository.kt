@@ -216,9 +216,9 @@ class ProductRepository {
                 var errorMessage = "HTTP ${response.code()}: Failed to delete product"
                 try {
                     val errorBody = response.errorBody()?.string()
-                    if (errorBody != null) {
+                    if (!errorBody.isNullOrBlank()) {
                         val errorResponse = gson.fromJson(errorBody, ApiResponse::class.java)
-                        if (errorResponse.message != null) {
+                        if (errorResponse?.message != null) {
                             errorMessage = errorResponse.message
                         }
                     }

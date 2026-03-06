@@ -61,6 +61,8 @@ fun AdminDashboardScreen(
                 viewModel = viewModel,
                 uiState = uiState
             )
+            AdminTab.CATEGORIES -> AdminCategoryManagementScreen()
+            AdminTab.BRANDS -> AdminBrandManagementScreen()
             AdminTab.ORDERS -> AdminOrdersTab(viewModel = viewModel)
             AdminTab.ANALYTICS -> AdminAnalyticsTab()
         }
@@ -94,18 +96,20 @@ private fun AdminTabRow(
     selectedTab: AdminTab,
     onTabSelect: (AdminTab) -> Unit
 ) {
-    Row(
+    ScrollableTabRow(
+        selectedTabIndex = selectedTab.ordinal,
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFF5F5F5))
-            .padding(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .background(Color(0xFFF5F5F5)),
+        containerColor = Color(0xFFF5F5F5),
+        edgePadding = 0.dp
     ) {
         AdminTab.entries.forEach { tab ->
             Tab(
                 selected = selectedTab == tab,
                 onClick = { onTabSelect(tab) },
-                text = { Text(tab.label) }
+                text = { Text(tab.label, fontSize = 12.sp) },
+                modifier = Modifier.padding(8.dp)
             )
         }
     }
@@ -222,6 +226,8 @@ private fun AdminAnalyticsTab() {
 
 enum class AdminTab(val label: String) {
     PRODUCTS("Products"),
+    CATEGORIES("Categories"),
+    BRANDS("Brands"),
     ORDERS("Orders"),
     ANALYTICS("Analytics")
 }
