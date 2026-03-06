@@ -33,7 +33,7 @@ import com.example.prm.ui.theme.PurpleJobsly
 
 @Composable
 fun ProductDetailScreen(
-    productId: Int,
+    productId: String,
     navController: NavHostController,
     viewModel: ProductDetailViewModel = viewModel()
 ) {
@@ -159,8 +159,8 @@ private fun ProductImageSection(images: List<String>, navController: NavHostCont
 @Composable
 private fun ProductInfoSection(
     product: com.example.prm.data.remote.dto.ProductDetail,
-    selectedVariantId: Int?,
-    onVariantSelect: (Int) -> Unit
+    selectedVariantId: String?,
+    onVariantSelect: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -228,8 +228,8 @@ private fun ProductInfoSection(
 @Composable
 private fun VariantsSection(
     variants: List<Variant>,
-    selectedVariantId: Int?,
-    onVariantSelect: (Int) -> Unit
+    selectedVariantId: String?,
+    onVariantSelect: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -265,8 +265,8 @@ private fun VariantsSection(
 @Composable
 private fun AddonsSection(
     addons: List<Addon>,
-    selectedAddons: List<Int>,
-    onAddonToggle: (Int) -> Unit
+    selectedAddons: List<String>,
+    onAddonToggle: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -438,7 +438,7 @@ private fun Modifier.align(alignment: Alignment): Modifier = this
 @Composable
 fun ProductDetailScreenPreview() {
     ProductDetailScreen(
-        productId = 1,
+        productId = "1",
         navController = androidx.navigation.compose.rememberNavController()
     )
 }

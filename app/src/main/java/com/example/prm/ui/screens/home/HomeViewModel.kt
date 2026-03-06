@@ -49,7 +49,7 @@ class HomeViewModel(
         }
     }
 
-    fun addToCart(productId: Int) {
+    fun addToCart(productId: String) {
         viewModelScope.launch {
             repository.addToCart(productId, 1)
         }
