@@ -63,4 +63,31 @@ class CartRepository {
             ResultState.Error(e.message ?: "Update cart error")
         }
     }
+
+    suspend fun removeFromCart(
+        cartItemId: String
+    ): ResultState<String> {
+
+        return try {
+
+            val response = api.removeFromCart(cartItemId)
+
+            if (response.isSuccessful && response.body() != null) {
+
+                val apiResponse = response.body()!!
+
+                if (apiResponse.success) {
+                    ResultState.Success("Removed")
+                } else {
+                    ResultState.Error(apiResponse.message ?: "Remove failed")
+                }
+
+            } else {
+                ResultState.Error("HTTP ${response.code()}")
+            }
+
+        } catch (e: Exception) {
+            ResultState.Error(e.message ?: "Remove from cart error")
+        }
+    }
 }
