@@ -67,4 +67,25 @@ class CartViewModel : ViewModel() {
         }
     }
 
+    fun removeFromCart(cartItemId: String) {
+        val currentCart = _uiState.value.cart ?: return
+
+        val updatedItems = currentCart.items.filter { it.id != cartItemId }
+        val updatedCart = currentCart.copy(
+            items = updatedItems,
+            subtotal = updatedItems.sumOf { it.unitPrice * it.quantity }
+        )
+
+        // UI UPDATE NGAY
+        _uiState.value = _uiState.value.copy(cart = updatedCart)
+
+        // CALL API BACKGROUND
+        viewModelScope.launch {
+            val result = repository.removeFromCart(cartItemId)
+            if (result is ResultState.Error) {
+                loadCart() // rollback
+            }
+        }
+    }
+
 }

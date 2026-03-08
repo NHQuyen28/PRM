@@ -34,7 +34,7 @@ fun AdminEditProductScreen(
     var categoryId by remember { mutableStateOf("") }
     var brandId by remember { mutableStateOf("") }
     var slug by remember { mutableStateOf("") }
-
+    var imageUrl by remember { mutableStateOf("") }
     LaunchedEffect(Unit) {
         viewModel.loadProduct(productId)
         viewModel.loadCategories()
@@ -49,6 +49,7 @@ fun AdminEditProductScreen(
             categoryId = product.categoryId
             brandId = product.brandId
             slug = product.slug
+            imageUrl = product.images?.firstOrNull()?.imageUrl ?: ""
         }
     }
 
@@ -116,6 +117,15 @@ fun AdminEditProductScreen(
 
                 item {
                     OutlinedTextField(
+                        value = imageUrl,
+                        onValueChange = { imageUrl = it },
+                        label = { Text("Image URL") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                item {
+                    OutlinedTextField(
                         value = basePrice,
                         onValueChange = { basePrice = it },
                         label = { Text("Base Price (₫) *") },
@@ -168,7 +178,8 @@ fun AdminEditProductScreen(
                                 basePrice.toDoubleOrNull() ?: 0.0,
                                 categoryId,
                                 brandId,
-                                slug
+                                slug,
+                                imageUrl
                             )
                             navController.navigateUp()
                         },
