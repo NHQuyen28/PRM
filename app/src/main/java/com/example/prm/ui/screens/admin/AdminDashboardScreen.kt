@@ -14,13 +14,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
 import com.example.prm.data.remote.dto.ProductResp
 import com.example.prm.ui.theme.PurpleJobsly
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 
 @Composable
 fun AdminDashboardScreen(
@@ -30,8 +37,24 @@ fun AdminDashboardScreen(
     val uiState by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableStateOf(AdminTab.PRODUCTS) }
 
-    LaunchedEffect(Unit) {
-        viewModel.loadProducts()
+    // === TỰ ĐỘNG RELOAD ===
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            // Mỗi khi màn hình này được hiển thị lại (trở về từ màn Add/Edit)
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // Sẽ tự động gọi API làm mới danh sách Product
+                viewModel.loadProducts()
+
+                // (Nếu sau này bạn làm thêm tab Orders hay Categories,
+                // bạn chỉ việc gọi thêm hàm loadOrders() ở ngay dòng này)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     Column(
@@ -178,14 +201,50 @@ private fun AdminProductCard(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
+            verticalAlignment = Alignment.CenterVertically // Đã đổi thành Center để căn giữa với ảnh
         ) {
+            // === ĐÃ THÊM: KHU VỰC HIỂN THỊ HÌNH ẢNH ===
+            val imageUrl = product.images?.firstOrNull()?.imageUrl
+
+            if (!imageUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = "Product Image",
+                    modifier = Modifier
+                        .size(60.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.White),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                // Hiển thị khung mặc định nếu chưa có ảnh
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFE0E0E0)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Image,
+                        contentDescription = "No image",
+                        tint = Color.Gray
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // === KHU VỰC HIỂN THỊ THÔNG TIN (Đã được điều chỉnh nhẹ) ===
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = product.productName,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "₫${product.basePrice}",
                     fontSize = 12.sp,
@@ -198,7 +257,9 @@ private fun AdminProductCard(
                     color = Color.Gray
                 )
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+
+            // === KHU VỰC NÚT BẤM ===
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
                     Icon(Icons.Default.Edit, contentDescription = "Edit", tint = PurpleJobsly)
                 }

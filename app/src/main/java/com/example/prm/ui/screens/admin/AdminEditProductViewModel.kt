@@ -98,12 +98,14 @@ class AdminEditProductViewModel(
         basePrice: Double,
         categoryId: String,
         brandId: String,
-        slug: String
+        slug: String,
+        imageUrl: String // ĐÃ THÊM BIẾN NÀY
     ) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, isSuccess = false)
 
             when (
+                // Sẽ báo đỏ ở đây, đừng lo, ta sẽ sửa Repository ở bước tiếp
                 val result = productRepository.updateProduct(
                     id = productId,
                     categoryId = categoryId,
@@ -112,20 +114,15 @@ class AdminEditProductViewModel(
                     slug = slug.ifBlank { null },
                     description = description.ifBlank { null },
                     basePrice = basePrice,
+                    imageUrl = imageUrl.ifBlank { null }, // ĐÃ THÊM BIẾN NÀY
                     isActive = _uiState.value.product?.isActive ?: true
                 )
             ) {
                 is ResultState.Success -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        isSuccess = true
-                    )
+                    _uiState.value = _uiState.value.copy(isLoading = false, isSuccess = true)
                 }
                 is ResultState.Error -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = result.message
-                    )
+                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = result.message)
                 }
                 is ResultState.Loading -> {
                     _uiState.value = _uiState.value.copy(isLoading = true)

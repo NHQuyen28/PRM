@@ -31,7 +31,7 @@ fun AdminAddProductScreen(
     var categoryId by remember { mutableStateOf("") }
     var brandId by remember { mutableStateOf("") }
     var slug by remember { mutableStateOf("") }
-
+    var imageUrl by remember { mutableStateOf("") }
     LaunchedEffect(Unit) {
         viewModel.loadCategories()
         viewModel.loadBrands()
@@ -107,6 +107,16 @@ fun AdminAddProductScreen(
 
                 item {
                     OutlinedTextField(
+                        value = imageUrl,
+                        onValueChange = { imageUrl = it },
+                        label = { Text("Image URL") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                item {
+                    OutlinedTextField(
                         value = basePrice,
                         onValueChange = { basePrice = it },
                         label = { Text("Base Price (₫) *") },
@@ -160,7 +170,8 @@ fun AdminAddProductScreen(
                                 basePrice = basePrice.toDoubleOrNull() ?: 0.0,
                                 categoryId = categoryId,
                                 brandId = brandId,
-                                slug = slug
+                                slug = slug,
+                                imageUrl = imageUrl
                             )
                             navController.navigateUp()
                         },
@@ -183,9 +194,10 @@ fun AdminAddProductScreen(
                 item {
                     uiState.errorMessage?.let {
                         Text(
-                            text = it,
+                            text = "LỖI TỪ BACKEND: $it", // Hiện rõ lỗi để ta biết
                             color = Color.Red,
-                            fontSize = 12.sp
+                            fontSize = 16.sp, // Cho chữ bự lên
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
