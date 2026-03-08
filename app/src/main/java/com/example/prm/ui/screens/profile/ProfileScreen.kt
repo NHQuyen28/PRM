@@ -1,193 +1,145 @@
 package com.example.prm.ui.screens.profile
 
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
 import com.example.prm.data.remote.dto.ProfileResponse
 import com.example.prm.ui.theme.PurpleJobsly
-import com.example.prm.utils.ImageUtil
-import android.graphics.BitmapFactory
-import android.util.Base64
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.foundation.Image
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.ExitToApp
 import com.example.prm.data.session.SessionManager
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     navController: NavHostController,
     viewModel: ProfileViewModel = viewModel()
 ) {
-
     val uiState by viewModel.uiState.collectAsState()
-
-    var showEditDialog by remember { mutableStateOf(false) }
-
     val context = LocalContext.current
-
     val sessionManager = remember { SessionManager(context) }
 
     LaunchedEffect(Unit) {
         viewModel.loadProfile()
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(Color(0xFFFAFAFA))
     ) {
-
-        TopAppBar(
-            title = { Text("Profile", color = Color.White) },
-
-            navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Default.ArrowBack, "Back", tint = Color.White)
-                }
-            },
-
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = PurpleJobsly
-            )
-        )
-
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter
-        ) {
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            // Header
+            item {
+                ProfileHeaderModern(navController = navController)
+            }
 
             when {
-
                 uiState.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(300.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = PurpleJobsly)
+                        }
+                    }
                 }
 
                 uiState.profile != null -> {
-
                     val profile = uiState.profile!!
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-
-                        Avatar(profile.avatarUrl)
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-
-                            Column(
-                                modifier = Modifier.padding(20.dp),
-                                verticalArrangement = Arrangement.spacedBy(14.dp)
-                            ) {
-
-                                ProfileItem("Name", profile.fullName)
-                                ProfileItem("Email", profile.email)
-                                ProfileItem("Phone", profile.phone ?: "N/A")
-                                ProfileItem("Address", profile.address ?: "N/A")
-
-                                Spacer(modifier = Modifier.height(10.dp))
-
-                                Button(
-                                    onClick = { showEditDialog = true },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text("Update Profile")
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.weight(1f))
-
-                        TextButton(
-                            onClick = {
-                                sessionManager.logout()
-
-                                navController.navigate("login") {
-                                    popUpTo(0)
-                                    launchSingleTop = true
-                                }
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ExitToApp,
-                                contentDescription = "Logout",
-                                tint = Color.Red
-                            )
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            Text("Logout", color = Color.Red)
-                        }
+                    
+                    item {
+                        ProfileAvatarModern(profile.avatarUrl)
                     }
 
-                    if (showEditDialog) {
+                    item {
+                        ProfileInfoCardsModern(profile)
+                    }
 
-                        UpdateProfileDialog(
-                            profile = profile,
-                            onDismiss = { showEditDialog = false },
-                            onSave = { name, phone, address, avatar ->
+                    item {
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
 
-                                viewModel.updateProfile(
-                                    name,
-                                    phone,
-                                    address,
-                                    avatar
-                                )
-
-                                showEditDialog = false
-                            }
+                    item {
+                        ProfileMenuItemModern(
+                            title = "?? Order History",
+                            subtitle = "View your orders",
+                            onClick = { navController.navigate("orders") }
                         )
                     }
+
+                    item {
+                        ProfileMenuItemModern(
+                            title = "?? Settings",
+                            subtitle = "Account preferences",
+                            onClick = { }
+                        )
+                    }
+
+                    item {
+                        ProfileMenuItemModern(
+                            title = "? Help",
+                            subtitle = "FAQs and support",
+                            onClick = { }
+                        )
+                    }
+
+                    item {
+                        LogoutButtonModern(
+                            sessionManager = sessionManager,
+                            navController = navController
+                        )
+                    }
+
+                    item {
+                        Spacer(modifier = Modifier.height(30.dp))
+                    }
                 }
 
-                uiState.error != null -> {
-
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.align(Alignment.Center)
-                    ) {
-
-                        Text(uiState.error!!)
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Button(
-                            onClick = {
-                                navController.navigate("login") {
-                                    popUpTo(0)
+                !uiState.error.isNullOrEmpty() -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(uiState.error ?: "Error", color = Color.Red)
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Button(
+                                    onClick = { navController.navigate("login") { popUpTo(0) } },
+                                    colors = ButtonDefaults.buttonColors(containerColor = PurpleJobsly)
+                                ) {
+                                    Text("Login Again")
                                 }
                             }
-                        ) {
-                            Text("Login")
                         }
                     }
                 }
@@ -197,162 +149,161 @@ fun ProfileScreen(
 }
 
 @Composable
-fun Avatar(base64: String?) {
-
-    val bitmap = remember(base64) {
-        try {
-            if (!base64.isNullOrEmpty()) {
-                val bytes = Base64.decode(base64, Base64.DEFAULT)
-                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-            } else null
-        } catch (e: Exception) {
-            null
-        }
-    }
-
+private fun ProfileHeaderModern(navController: NavHostController) {
     Box(
         modifier = Modifier
-            .size(130.dp)
-            .clip(CircleShape)
-            .background(Color.White)
-            .padding(4.dp),
+            .fillMaxWidth()
+            .background(
+                brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                    colors = listOf(PurpleJobsly, Color(0xFF7C3AED))
+                )
+            )
+            .padding(20.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Default.ArrowBack,
+                contentDescription = "Back",
+                tint = Color.White,
+                modifier = Modifier
+                    .size(28.dp)
+                    .clickable { navController.popBackStack() }
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text("My Account", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+                Text("Manage your profile", color = Color.White.copy(alpha = 0.85f), fontSize = 12.sp)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProfileAvatarModern(avatarUrl: String?) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(20.dp),
         contentAlignment = Alignment.Center
     ) {
-
-        if (bitmap != null) {
-
-            Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = "Avatar",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop
-            )
-
-        } else {
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(CircleShape)
-                    .background(PurpleJobsly.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-
-                Icon(
-                    Icons.Default.Person,
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .clip(CircleShape)
+                .shadow(elevation = 8.dp, shape = CircleShape)
+                .background(Color(0xFFF0F7FF)),
+            contentAlignment = Alignment.Center
+        ) {
+            if (!avatarUrl.isNullOrEmpty()) {
+                AsyncImage(
+                    model = avatarUrl,
                     contentDescription = "Avatar",
-                    modifier = Modifier.size(60.dp),
-                    tint = PurpleJobsly
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
                 )
+            } else {
+                Icon(Icons.Default.Person, contentDescription = null, tint = PurpleJobsly, modifier = Modifier.size(60.dp))
             }
         }
     }
 }
 
 @Composable
-fun ProfileItem(title: String, value: String) {
+private fun ProfileInfoCardsModern(profile: ProfileResponse) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .shadow(elevation = 4.dp, shape = RoundedCornerShape(16.dp)),
+        color = Color.White
+    ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
+            ProfileRowModern(Icons.Default.Person, "Full Name", profile.fullName, PurpleJobsly)
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(color = Color(0xFFEEE))
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            ProfileRowModern(Icons.Default.Email, "Email", profile.email, Color(0xFF00A8FF))
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(color = Color(0xFFEEE))
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            ProfileRowModern(Icons.Default.Phone, "Phone", profile.phone ?: "Not added", Color(0xFF27AE60))
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(color = Color(0xFFEEE))
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            ProfileRowModern(Icons.Default.LocationOn, "Address", profile.address ?: "Not added", Color(0xFFE67E22))
+        }
+    }
+}
 
+@Composable
+private fun ProfileRowModern(icon: ImageVector, title: String, value: String, color: Color) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-
-        Text(
-            text = title,
-            color = Color.Gray
-        )
-
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyLarge
-        )
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .background(color.copy(alpha = 0.15f), shape = RoundedCornerShape(10.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(22.dp))
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, fontSize = 11.sp, color = Color(0xFF999), fontWeight = FontWeight.SemiBold)
+            Text(value, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        }
     }
 }
 
 @Composable
-fun UpdateProfileDialog(
-    profile: ProfileResponse,
-    onDismiss: () -> Unit,
-    onSave: (String, String, String, String) -> Unit
-) {
-
-    var name by remember { mutableStateOf(profile.fullName) }
-    var phone by remember { mutableStateOf(profile.phone ?: "") }
-    var address by remember { mutableStateOf(profile.address ?: "") }
-    var avatar by remember { mutableStateOf(profile.avatarUrl ?: "") }
-    val context = LocalContext.current
-
-    val launcher = rememberLauncherForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-
-        if (uri != null) {
-
-            avatar = ImageUtil.uriToBase64(context, uri)
-
+private fun ProfileMenuItemModern(title: String, subtitle: String, onClick: () -> Unit) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { onClick() }
+            .shadow(elevation = 2.dp, shape = RoundedCornerShape(12.dp)),
+        color = Color.White
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                Text(subtitle, fontSize = 11.sp, color = Color(0xFF999), modifier = Modifier.padding(top = 4.dp))
+            }
+            Icon(Icons.Default.ArrowBack, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color(0xFFCCC))
         }
     }
+}
 
-    AlertDialog(
-
-        onDismissRequest = onDismiss,
-
-        title = {
-            Text("Update Profile")
-        },
-
-        confirmButton = {
-
-            Button(
-                onClick = {
-                    onSave(name, phone, address, avatar)
-                }
-            ) {
-                Text("Save")
-            }
-        },
-
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        },
-
-        text = {
-
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-
-                Avatar(avatar)
-
-                Button(
-                    onClick = { launcher.launch("image/*") },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Choose Avatar")
-                }
-
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Full Name") }
-                )
-
-                OutlinedTextField(
-                    value = phone,
-                    onValueChange = { phone = it },
-                    label = { Text("Phone") }
-                )
-
-                OutlinedTextField(
-                    value = address,
-                    onValueChange = { address = it },
-                    label = { Text("Address") }
-                )
-            }
+@Composable
+private fun LogoutButtonModern(sessionManager: SessionManager, navController: NavHostController) {
+    Column(modifier = Modifier.padding(16.dp)) {
+        Button(
+            onClick = {
+                sessionManager.logout()
+                navController.navigate("login") { popUpTo(0); launchSingleTop = true }
+            },
+            modifier = Modifier.fillMaxWidth().height(50.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B6B)),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(Icons.Default.ExitToApp, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Logout", fontWeight = FontWeight.Bold, fontSize = 14.sp)
         }
-    )
+    }
 }

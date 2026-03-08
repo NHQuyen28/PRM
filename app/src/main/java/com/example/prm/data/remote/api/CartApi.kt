@@ -7,6 +7,8 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PUT
+import retrofit2.http.DELETE
+import retrofit2.http.Path
 
 interface CartApi {
 
@@ -16,6 +18,11 @@ interface CartApi {
     @PUT("Cart/update")
     suspend fun updateCart(
         @Body request: UpdateCartRequest
+    ): Response<ApiResponse<String>>
+
+    @DELETE("Cart/{itemId}")
+    suspend fun removeFromCart(
+        @Path("itemId") itemId: String
     ): Response<ApiResponse<String>>
 
 }
