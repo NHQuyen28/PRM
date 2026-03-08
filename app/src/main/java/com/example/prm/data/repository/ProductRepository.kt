@@ -100,6 +100,7 @@ class ProductRepository {
         slug: String?,
         description: String?,
         basePrice: Double,
+        imageUrl: String?, // ĐÃ THÊM THAM SỐ NÀY
         isActive: Boolean = true
     ): ResultState<ProductResp> {
         return try {
@@ -113,7 +114,8 @@ class ProductRepository {
                 basePrice = basePrice,
                 isActive = isActive,
                 variants = null,
-                imageUrls = null
+                // ĐÃ SỬA: Biến URL dạng chuỗi thành List để gửi xuống API
+                imageUrls = if (!imageUrl.isNullOrBlank()) listOf(imageUrl) else null
             )
 
             val response = productApi.createProduct(request)
@@ -157,6 +159,7 @@ class ProductRepository {
         slug: String?,
         description: String?,
         basePrice: Double,
+        imageUrl: String?,
         isActive: Boolean
     ): ResultState<ProductResp> {
         return try {
@@ -169,7 +172,8 @@ class ProductRepository {
                 slug = slug,
                 description = description,
                 basePrice = basePrice,
-                isActive = isActive
+                isActive = isActive,
+                imageUrls = if (!imageUrl.isNullOrBlank()) listOf(imageUrl) else null
             )
 
             val response = productApi.updateProduct(request)

@@ -73,25 +73,30 @@ class AdminAddProductViewModel(
         }
     }
 
+    // ĐÃ THÊM imageUrl VÀO ĐÂY
     fun createProduct(
         productName: String,
         description: String,
         basePrice: Double,
         categoryId: String,
         brandId: String,
-        slug: String
+        slug: String,
+        imageUrl: String
     ) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, isSuccess = false)
 
             when (
+                // LƯU Ý: Chỗ này sẽ báo lỗi đỏ (Unresolved reference: imageUrl)
+                // vì chúng ta chưa cập nhật ProductRepository. Đừng lo, ta sẽ sửa nó ở Bước 2.
                 val result = productRepository.createProduct(
                     categoryId = categoryId,
                     brandId = brandId,
                     productName = productName,
                     slug = slug.ifBlank { null },
                     description = description.ifBlank { null },
-                    basePrice = basePrice
+                    basePrice = basePrice,
+                    imageUrl = imageUrl.ifBlank { null }
                 )
             ) {
                 is ResultState.Success -> {

@@ -79,7 +79,8 @@ data class UpdateProductRequest(
     val slug: String? = null,
     val description: String? = null,
     val basePrice: Double,
-    val isActive: Boolean
+    val isActive: Boolean,
+    val imageUrls: List<String>? = null
 )
 
 data class CreateProductVariantRequest(
