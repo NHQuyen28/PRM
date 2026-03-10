@@ -9,11 +9,9 @@ object ImageUtil {
 
     fun uriToBase64(context: Context, uri: Uri): String {
 
-        val inputStream: InputStream? =
-            context.contentResolver.openInputStream(uri)
+        val inputStream = context.contentResolver.openInputStream(uri)
+        val bytes = inputStream?.readBytes() ?: return ""
 
-        val bytes = inputStream?.readBytes()
-
-        return Base64.encodeToString(bytes, Base64.DEFAULT)
+        return Base64.encodeToString(bytes, Base64.NO_WRAP)
     }
 }
