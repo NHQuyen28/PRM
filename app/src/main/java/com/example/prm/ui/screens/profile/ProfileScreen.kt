@@ -1,5 +1,8 @@
 package com.example.prm.ui.screens.profile
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -32,6 +35,11 @@ import coil.compose.AsyncImage
 import com.example.prm.data.remote.dto.ProfileResponse
 import com.example.prm.ui.theme.PurpleJobsly
 import com.example.prm.data.session.SessionManager
+import com.example.prm.utils.ImageUtil
+import android.graphics.BitmapFactory
+import android.util.Base64
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.asImageBitmap
 
 @Composable
 fun ProfileScreen(
@@ -41,6 +49,20 @@ fun ProfileScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
+
+    var avatarBase64 by remember { mutableStateOf("") }
+    var avatarPreview by remember { mutableStateOf<Uri?>(null) }
+
+    var showEditDialog by remember { mutableStateOf(false) }
+
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            avatarPreview = it
+            avatarBase64 = ImageUtil.uriToBase64(context, it)
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.loadProfile()
@@ -75,7 +97,27 @@ fun ProfileScreen(
                     val profile = uiState.profile!!
                     
                     item {
-                        ProfileAvatarModern(profile.avatarUrl)
+                        ProfileAvatarModern(
+                            avatarUrl = profile.avatarUrl,
+                            avatarPreview = avatarPreview
+                        )
+                    }
+
+                    item {
+
+                        Button(
+                            onClick = {
+                                showEditDialog = true
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp)
+                                .height(50.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = PurpleJobsly),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("Update Profile")
+                        }
                     }
 
                     item {
@@ -145,6 +187,116 @@ fun ProfileScreen(
                 }
             }
         }
+
+        if (showEditDialog && uiState.profile != null) {
+
+            val profile = uiState.profile!!
+
+            var fullName by remember { mutableStateOf(profile.fullName) }
+            var phone by remember { mutableStateOf(profile.phone ?: "") }
+            var address by remember { mutableStateOf(profile.address ?: "") }
+
+            AlertDialog(
+
+                onDismissRequest = { showEditDialog = false },
+
+                title = {
+                    Text("Update Profile")
+                },
+
+                text = {
+
+                    Column {
+
+                        Button(
+                            onClick = {
+                                imagePicker.launch("image/*")
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Choose Avatar")
+                        }
+
+                        avatarPreview?.let {
+                            AsyncImage(
+                                model = it,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .clip(CircleShape)
+                                    .align(Alignment.CenterHorizontally),
+                                contentScale = ContentScale.Crop
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        OutlinedTextField(
+                            value = fullName,
+                            onValueChange = { fullName = it },
+                            label = { Text("Full Name") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        OutlinedTextField(
+                            value = phone,
+                            onValueChange = { phone = it },
+                            label = { Text("Phone") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        OutlinedTextField(
+                            value = address,
+                            onValueChange = { address = it },
+                            label = { Text("Address") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                    }
+
+                },
+
+                confirmButton = {
+
+                    Button(
+                        onClick = {
+
+                            viewModel.updateProfile(
+                                fullName = fullName,
+                                phone = phone,
+                                address = address,
+                                avatarUrl = if (avatarBase64.isNotEmpty())
+                                    avatarBase64
+                                else
+                                    profile.avatarUrl ?: ""
+                            )
+
+                            showEditDialog = false
+                        }
+                    ) {
+                        Text("Save")
+                    }
+
+                },
+
+                dismissButton = {
+
+                    TextButton(
+                        onClick = { showEditDialog = false }
+                    ) {
+                        Text("Cancel")
+                    }
+
+                }
+
+            )
+        }
     }
 }
 
@@ -182,30 +334,58 @@ private fun ProfileHeaderModern(navController: NavHostController) {
 }
 
 @Composable
-private fun ProfileAvatarModern(avatarUrl: String?) {
+private fun ProfileAvatarModern(
+    avatarUrl: String?,
+    avatarPreview: Uri?
+) {
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(20.dp),
         contentAlignment = Alignment.Center
     ) {
+
         Box(
             modifier = Modifier
                 .size(120.dp)
                 .clip(CircleShape)
-                .shadow(elevation = 8.dp, shape = CircleShape)
-                .background(Color(0xFFF0F7FF)),
+                .shadow(8.dp, CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            if (!avatarUrl.isNullOrEmpty()) {
-                AsyncImage(
-                    model = avatarUrl,
-                    contentDescription = "Avatar",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Icon(Icons.Default.Person, contentDescription = null, tint = PurpleJobsly, modifier = Modifier.size(60.dp))
+
+            when {
+
+                avatarPreview != null -> {
+                    AsyncImage(
+                        model = avatarPreview,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+
+                !avatarUrl.isNullOrEmpty() -> {
+
+                    val imageBytes = Base64.decode(avatarUrl, Base64.DEFAULT)
+                    val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+
+                    Image(
+                        bitmap = bitmap.asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+
+                else -> {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        tint = PurpleJobsly,
+                        modifier = Modifier.size(60.dp)
+                    )
+                }
             }
         }
     }
