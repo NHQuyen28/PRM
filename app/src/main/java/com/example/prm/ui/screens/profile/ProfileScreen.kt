@@ -40,6 +40,8 @@ import android.graphics.BitmapFactory
 import android.util.Base64
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.asImageBitmap
+import com.example.prm.data.remote.dto.AddressResponse
+import com.example.prm.data.remote.dto.OrderResponse
 
 @Composable
 fun ProfileScreen(
@@ -54,6 +56,15 @@ fun ProfileScreen(
     var avatarPreview by remember { mutableStateOf<Uri?>(null) }
 
     var showEditDialog by remember { mutableStateOf(false) }
+
+    var showAddressDialog by remember { mutableStateOf(false) }
+
+    var showAddresses by remember { mutableStateOf(false) }
+
+    var showOrders by remember { mutableStateOf(false) }
+
+    var showEditAddressDialog by remember { mutableStateOf(false) }
+    var editingAddress by remember { mutableStateOf<AddressResponse?>(null) }
 
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -95,7 +106,7 @@ fun ProfileScreen(
 
                 uiState.profile != null -> {
                     val profile = uiState.profile!!
-                    
+
                     item {
                         ProfileAvatarModern(
                             avatarUrl = profile.avatarUrl,
@@ -130,26 +141,148 @@ fun ProfileScreen(
 
                     item {
                         ProfileMenuItemModern(
-                            title = "?? Order History",
-                            subtitle = "View your orders",
-                            onClick = { navController.navigate("orders") }
+                            title = "📍 Add Addresses",
+                            subtitle = "Manage delivery addresses",
+                            onClick = {
+                                showAddressDialog = true
+                            }
                         )
                     }
 
                     item {
                         ProfileMenuItemModern(
-                            title = "?? Settings",
-                            subtitle = "Account preferences",
-                            onClick = { }
+                            title = "📍View My Addresses",
+                            subtitle = "Manage delivery addresses",
+                            onClick = {
+                                showAddresses = !showAddresses
+
+                                if (showAddresses) {
+                                    viewModel.loadAddresses()
+                                }
+                            }
                         )
+
                     }
 
                     item {
                         ProfileMenuItemModern(
-                            title = "? Help",
-                            subtitle = "FAQs and support",
-                            onClick = { }
+                            title = "📦 My Orders",
+                            subtitle = "View your order history",
+                            onClick = {
+
+                                showOrders = !showOrders
+
+                                if (showOrders) {
+                                    viewModel.loadOrders()
+                                }
+
+                            }
                         )
+                    }
+
+                    if (showOrders) {
+
+                        item {
+
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                shadowElevation = 4.dp,
+                                color = Color.White
+                            ) {
+
+                                Column(modifier = Modifier.padding(16.dp)) {
+
+                                    Text(
+                                        text = "My Orders",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    if (uiState.orders.isEmpty()) {
+
+                                        Text(
+                                            "No orders yet",
+                                            color = Color.Gray
+                                        )
+
+                                    } else {
+
+                                        uiState.orders.forEach { order ->
+
+                                            OrderItem(order)
+
+                                            Spacer(modifier = Modifier.height(10.dp))
+
+                                        }
+
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+
+
+                    if (showAddresses) {
+
+                        item {
+
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                shadowElevation = 4.dp,
+                                color = Color.White
+                            ) {
+
+                                Column(modifier = Modifier.padding(16.dp)) {
+
+                                    Text(
+                                        text = "Saved Addresses",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    uiState.addresses.forEach { address ->
+
+                                        AddressItem(
+                                            address = address,
+
+                                            onSetDefault = { id ->
+                                                viewModel.setDefaultAddress(id)
+                                            },
+
+                                            onDelete = { id ->
+                                                viewModel.deleteAddress(id)
+                                            },
+
+                                            onEdit = { address ->
+                                                editingAddress = address
+                                                showEditAddressDialog = true
+                                            }
+                                        )
+
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
                     }
 
                     item {
@@ -173,13 +306,26 @@ fun ProfileScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(uiState.error ?: "Error", color = Color.Red)
-                                Spacer(modifier = Modifier.height(16.dp))
+                                Spacer(modifier = Modifier.height(66.dp))
+
+                                Text(
+                                    "Please log in to view your profile",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+
+                                Spacer(modifier = Modifier.height(36.dp))
+
                                 Button(
-                                    onClick = { navController.navigate("login") { popUpTo(0) } },
-                                    colors = ButtonDefaults.buttonColors(containerColor = PurpleJobsly)
+                                    onClick = { navController.navigate("login") },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(50.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = PurpleJobsly),
+                                    shape = RoundedCornerShape(12.dp)
                                 ) {
-                                    Text("Login Again")
+                                    Text("Sign In", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 }
                             }
                         }
@@ -297,6 +443,324 @@ fun ProfileScreen(
 
             )
         }
+
+        if (showEditAddressDialog && editingAddress != null) {
+
+            var recipientName by remember { mutableStateOf(editingAddress!!.recipientName) }
+            var phone by remember { mutableStateOf(editingAddress!!.phone) }
+            var province by remember { mutableStateOf(editingAddress!!.province) }
+            var district by remember { mutableStateOf(editingAddress!!.district) }
+            var ward by remember { mutableStateOf(editingAddress!!.ward) }
+            var detailAddress by remember { mutableStateOf(editingAddress!!.detailAddress) }
+            var isDefault by remember { mutableStateOf(editingAddress!!.isDefault) }
+
+            AlertDialog(
+
+                onDismissRequest = { showEditAddressDialog = false },
+
+                title = { Text("Edit Address") },
+
+                text = {
+
+                    Column {
+
+                        OutlinedTextField(
+                            value = recipientName,
+                            onValueChange = { recipientName = it },
+                            label = { Text("Recipient Name") }
+                        )
+
+                        OutlinedTextField(
+                            value = phone,
+                            onValueChange = { phone = it },
+                            label = { Text("Phone") }
+                        )
+
+                        OutlinedTextField(
+                            value = province,
+                            onValueChange = { province = it },
+                            label = { Text("Province") }
+                        )
+
+                        OutlinedTextField(
+                            value = district,
+                            onValueChange = { district = it },
+                            label = { Text("District") }
+                        )
+
+                        OutlinedTextField(
+                            value = ward,
+                            onValueChange = { ward = it },
+                            label = { Text("Ward") }
+                        )
+
+                        OutlinedTextField(
+                            value = detailAddress,
+                            onValueChange = { detailAddress = it },
+                            label = { Text("Detail Address") }
+                        )
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+
+                            Checkbox(
+                                checked = isDefault,
+                                onCheckedChange = { isDefault = it }
+                            )
+
+                            Text("Set as default")
+                        }
+                    }
+                },
+
+                confirmButton = {
+
+                    Button(
+                        onClick = {
+
+                            viewModel.updateAddress(
+                                editingAddress!!.id,
+                                recipientName,
+                                phone,
+                                province,
+                                district,
+                                ward,
+                                detailAddress,
+                                isDefault
+                            )
+
+                            showEditAddressDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4CAF50),
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Save")
+                    }
+
+                },
+
+                dismissButton = {
+
+                    Button(
+                        onClick = { showEditAddressDialog = false },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFE53935),
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Cancel")
+                    }
+
+                }
+            )
+        }
+
+        if (showAddressDialog) {
+
+            var recipientName by remember { mutableStateOf("") }
+            var phone by remember { mutableStateOf("") }
+            var province by remember { mutableStateOf("") }
+            var district by remember { mutableStateOf("") }
+            var ward by remember { mutableStateOf("") }
+            var detailAddress by remember { mutableStateOf("") }
+            var isDefault by remember { mutableStateOf(false) }
+
+            AlertDialog(
+
+                onDismissRequest = { showAddressDialog = false },
+
+                title = { Text("Add New Address") },
+
+                text = {
+                    Column {
+
+                        OutlinedTextField(
+                            value = recipientName,
+                            onValueChange = { recipientName = it },
+                            label = { Text("Recipient Name") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedTextField(
+                            value = phone,
+                            onValueChange = { phone = it },
+                            label = { Text("Phone") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedTextField(
+                            value = province,
+                            onValueChange = { province = it },
+                            label = { Text("Province") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedTextField(
+                            value = district,
+                            onValueChange = { district = it },
+                            label = { Text("District") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedTextField(
+                            value = ward,
+                            onValueChange = { ward = it },
+                            label = { Text("Ward") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedTextField(
+                            value = detailAddress,
+                            onValueChange = { detailAddress = it },
+                            label = { Text("Detail Address") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+
+                            Checkbox(
+                                checked = isDefault,
+                                onCheckedChange = { isDefault = it }
+                            )
+
+                            Text("Set as default address")
+                        }
+                    }
+                },
+
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            viewModel.createAddress(
+                                recipientName,
+                                phone,
+                                province,
+                                district,
+                                ward,
+                                detailAddress,
+                                isDefault
+                            )
+                            showAddressDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4CAF50),
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Save")
+                    }
+                },
+
+                dismissButton = {
+                    Button(
+                        onClick = { showAddressDialog = false },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFE53935),
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun AddressItem(
+    address: AddressResponse,
+    onSetDefault: (String) -> Unit,
+    onDelete: (String) -> Unit,
+    onEdit: (AddressResponse) -> Unit
+) {
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFFF8F8F8), RoundedCornerShape(10.dp))
+            .padding(12.dp)
+    ) {
+
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+
+            Text(
+                text = address.recipientName,
+                fontWeight = FontWeight.Bold
+            )
+
+            if (address.isDefault) {
+
+                Text(
+                    text = "Default",
+                    color = Color.White,
+                    modifier = Modifier
+                        .background(Color(0xFF27AE60), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(address.phone)
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = address.fullAddress,
+            color = Color.Gray,
+            fontSize = 13.sp
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+
+            Button(
+                onClick = { onSetDefault(address.id) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF27AE60)
+                )
+            ) {
+                Text("Set Default")
+            }
+
+            Button(
+                onClick = { onEdit(address) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFF39C12)
+                )
+            ) {
+                Text("Edit")
+            }
+
+            Button(
+                onClick = { onDelete(address.id) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFE74C3C)
+                )
+            ) {
+                Text("Delete")
+            }
+        }
     }
 }
 
@@ -406,17 +870,17 @@ private fun ProfileInfoCardsModern(profile: ProfileResponse) {
             Spacer(modifier = Modifier.height(16.dp))
             HorizontalDivider(color = Color(0xFFEEE))
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             ProfileRowModern(Icons.Default.Email, "Email", profile.email, Color(0xFF00A8FF))
             Spacer(modifier = Modifier.height(16.dp))
             HorizontalDivider(color = Color(0xFFEEE))
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             ProfileRowModern(Icons.Default.Phone, "Phone", profile.phone ?: "Not added", Color(0xFF27AE60))
             Spacer(modifier = Modifier.height(16.dp))
             HorizontalDivider(color = Color(0xFFEEE))
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             ProfileRowModern(Icons.Default.LocationOn, "Address", profile.address ?: "Not added", Color(0xFFE67E22))
         }
     }
@@ -486,4 +950,40 @@ private fun LogoutButtonModern(sessionManager: SessionManager, navController: Na
             Text("Logout", fontWeight = FontWeight.Bold, fontSize = 14.sp)
         }
     }
+}
+
+@Composable
+fun OrderItem(order: OrderResponse) {
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFFF8F8F8), RoundedCornerShape(10.dp))
+            .padding(12.dp)
+    ) {
+
+        Text("Status: ${order.statusDisplay}")
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = "Total: ₫${String.format("%,.2f", order.totalAmount)}",
+            color = Color(0xFF27AE60),
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        order.orderDetails.forEach {
+
+            Text(
+                text = "${it.productName} x${it.quantity}",
+                fontSize = 13.sp,
+                color = Color.Gray
+            )
+
+        }
+
+    }
+
 }

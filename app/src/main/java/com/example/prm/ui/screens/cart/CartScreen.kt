@@ -318,7 +318,7 @@ private fun ModernCartItemCard(
 
                 // Price
                 Text(
-                    text = "₩${String.format("%,d", item.unitPrice.toInt())}",
+                    text = "${String.format("%,.2f", item.unitPrice)} đ",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = PurpleJobsly
@@ -414,7 +414,7 @@ private fun CartSummarySection(
             ) {
                 Text("Subtotal", fontSize = 13.sp, color = Color(0xFF666))
                 Text(
-                    "₩${String.format("%,d", cart.subtotal.toInt())}",
+                    "${String.format("%,.2f", cart.subtotal)} đ",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -428,7 +428,7 @@ private fun CartSummarySection(
             ) {
                 Text("Shipping", fontSize = 13.sp, color = Color(0xFF666))
                 Text(
-                    "₩30,000",
+                    "30,000 đ",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -442,7 +442,7 @@ private fun CartSummarySection(
             ) {
                 Text("Discount", fontSize = 13.sp, color = Color(0xFF666))
                 Text(
-                    "-₩0",
+                    "-0 đ",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFFFF6B6B)
@@ -467,7 +467,7 @@ private fun CartSummarySection(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    "₩${String.format("%,d", (cart.subtotal + 30000).toInt())}",
+                    "${String.format("%,.2f", cart.subtotal + 30000)} đ",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = PurpleJobsly

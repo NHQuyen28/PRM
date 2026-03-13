@@ -1,5 +1,6 @@
 package com.example.prm.data.remote
 
+import com.example.prm.data.remote.api.OrderApi
 import com.example.prm.data.session.SessionManager
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -73,6 +74,10 @@ object RetrofitClient {
 
     fun <T> createService(serviceClass: Class<T>): T {
         return retrofit.create(serviceClass)
+    }
+
+    val orderApi: OrderApi by lazy {
+        retrofit.create(OrderApi::class.java)
     }
 }
 

@@ -2,79 +2,124 @@ package com.example.prm.ui.screens.checkout
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.prm.data.repository.ProductRepository
+import com.example.prm.data.remote.dto.AddressResponse
+import com.example.prm.data.remote.dto.CreateOrderRequest
+import com.example.prm.data.repository.AddressRepository
+import com.example.prm.data.repository.CartRepository
+import com.example.prm.data.repository.OrderRepository
 import com.example.prm.utils.ResultState
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class CheckoutViewModel : ViewModel() {
-    private val repository = ProductRepository()
+
+    private val addressRepository = AddressRepository()
+
+    private val orderRepository = OrderRepository()
+
+    private val cartRepository = CartRepository()
 
     private val _uiState = MutableStateFlow(CheckoutUiState())
-    val uiState: StateFlow<CheckoutUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<CheckoutUiState> = _uiState
 
-    init {
-        loadCheckoutQuote()
-    }
 
-    private fun loadCheckoutQuote() {
+    fun loadAddresses() {
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            when (val result = repository.getCheckoutQuote()) {
+
+            when (val result = addressRepository.getAddresses()) {
+
                 is ResultState.Success -> {
-                    _uiState.update {
-                        it.copy(
-                            quote = result.data,
-                            isLoading = false
-                        )
-                    }
+
+                    val defaultAddress = result.data.find { it.isDefault }
+
+                    _uiState.value = _uiState.value.copy(
+                        addresses = result.data,
+                        selectedAddress = defaultAddress
+                    )
                 }
+
                 is ResultState.Error -> {
-                    _uiState.update {
-                        it.copy(
-                            errorMessage = result.message,
-                            isLoading = false
-                        )
-                    }
+
+                    _uiState.value = _uiState.value.copy(
+                        error = result.message
+                    )
+
                 }
-                is ResultState.Loading -> {}
+
+                else -> {}
             }
+
         }
     }
 
-    fun updateFullName(name: String) {
-        _uiState.update { it.copy(fullName = name) }
-    }
+    fun selectAddress(address: com.example.prm.data.remote.dto.AddressResponse) {
 
-    fun updateEmail(email: String) {
-        _uiState.update { it.copy(email = email) }
-    }
+        _uiState.value = _uiState.value.copy(
+            selectedAddress = address
+        )
 
-    fun updatePhone(phone: String) {
-        _uiState.update { it.copy(phone = phone) }
-    }
-
-    fun updateAddress(address: String) {
-        _uiState.update { it.copy(address = address) }
-    }
-
-    fun updateCity(city: String) {
-        _uiState.update { it.copy(city = city) }
-    }
-
-    fun updateZipCode(zipCode: String) {
-        _uiState.update { it.copy(zipCode = zipCode) }
     }
 
     fun placeOrder() {
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isProcessing = true) }
-            delay(2000) // Simulate API call
-            _uiState.update { it.copy(isProcessing = false, orderPlaced = true) }
+
+            val address = _uiState.value.selectedAddress ?: return@launch
+
+            val request = CreateOrderRequest(
+
+                addressId = address.id,
+
+                recipientName = address.recipientName,
+
+                recipientPhone = address.phone,
+
+                shippingAddress = address.fullAddress,
+
+                voucherId = null,
+
+                paymentMethod = 0,
+
+                notes = null
+
+            )
+
+            orderRepository.createOrder(request)
+
         }
+
     }
+
+    fun loadCart() {
+
+        viewModelScope.launch {
+
+            when (val result = cartRepository.getCart()) {
+
+                is ResultState.Success -> {
+
+                    _uiState.value = _uiState.value.copy(
+                        cart = result.data
+                    )
+
+                }
+
+                is ResultState.Error -> {
+
+                    _uiState.value = _uiState.value.copy(
+                        error = result.message
+                    )
+
+                }
+
+                else -> {}
+
+            }
+
+        }
+
+    }
+
 }

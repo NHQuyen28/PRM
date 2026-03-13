@@ -1,17 +1,18 @@
 package com.example.prm.ui.screens.checkout
 
-import com.example.prm.data.remote.dto.CheckoutQuoteResponse
+import com.example.prm.data.remote.dto.AddressResponse
+import com.example.prm.data.remote.dto.cart.CartDataDto
 
 data class CheckoutUiState(
-    val quote: CheckoutQuoteResponse? = null,
+
+    val addresses: List<AddressResponse> = emptyList(),
+
+    val selectedAddress: AddressResponse? = null,
+
+    val cart: CartDataDto? = null,
+
     val isLoading: Boolean = false,
-    val errorMessage: String? = null,
-    val isProcessing: Boolean = false,
-    val orderPlaced: Boolean = false,
-    val fullName: String = "",
-    val email: String = "",
-    val phone: String = "",
-    val address: String = "",
-    val city: String = "",
-    val zipCode: String = ""
+
+    val error: String? = null
+
 )
