@@ -18,7 +18,9 @@ import com.example.prm.ui.screens.product_detail.ProductDetailScreen
 import com.example.prm.ui.screens.checkout.CheckoutScreen
 import com.example.prm.ui.screens.admin.AdminDashboardScreen
 import com.example.prm.ui.screens.admin.AdminAddProductScreen
+import com.example.prm.ui.screens.admin.AdminAddVoucherScreen
 import com.example.prm.ui.screens.admin.AdminEditProductScreen
+import com.example.prm.ui.screens.admin.AdminEditVoucherScreen
 import com.example.prm.ui.screens.profile.ProfileScreen
 
 @Composable
@@ -123,6 +125,24 @@ fun AppNavigation() {
         // Admin screens
         composable(route = "admin_dashboard") {
             AdminDashboardScreen(navController = navController)
+        }
+        composable("admin_add_voucher") {
+            AdminAddVoucherScreen(navController = navController)
+        }
+
+        composable(
+            route = "admin_edit_voucher/{voucherId}",
+            arguments = listOf(
+                navArgument("voucherId") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val voucherId = backStackEntry.arguments?.getString("voucherId") ?: ""
+            AdminEditVoucherScreen(
+                voucherId = voucherId,
+                navController = navController
+            )
         }
 
         composable(route = "admin_add_product") {

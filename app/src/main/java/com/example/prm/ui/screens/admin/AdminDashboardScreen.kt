@@ -87,6 +87,7 @@ fun AdminDashboardScreen(
             AdminTab.CATEGORIES -> AdminCategoryManagementScreen()
             AdminTab.BRANDS -> AdminBrandManagementScreen()
             AdminTab.ORDERS -> AdminOrdersTab(viewModel = viewModel)
+            AdminTab.VOUCHERS -> AdminVoucherManagementScreen(navController = navController)
             AdminTab.ANALYTICS -> AdminAnalyticsTab()
         }
     }
@@ -290,5 +291,6 @@ enum class AdminTab(val label: String) {
     CATEGORIES("Categories"),
     BRANDS("Brands"),
     ORDERS("Orders"),
+    VOUCHERS("Vouchers"),
     ANALYTICS("Analytics")
 }
