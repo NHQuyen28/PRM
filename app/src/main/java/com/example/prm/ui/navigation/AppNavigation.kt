@@ -15,10 +15,10 @@ import com.example.prm.ui.screens.register.RegisterScreen
 import com.example.prm.ui.screens.home.HomeScreen
 import com.example.prm.ui.screens.products.ProductListScreen
 import com.example.prm.ui.screens.product_detail.ProductDetailScreen
-import com.example.prm.ui.screens.checkout.CheckoutScreen
 import com.example.prm.ui.screens.admin.AdminDashboardScreen
 import com.example.prm.ui.screens.admin.AdminAddProductScreen
 import com.example.prm.ui.screens.admin.AdminEditProductScreen
+import com.example.prm.ui.screens.checkout.CheckoutScreen
 import com.example.prm.ui.screens.profile.ProfileScreen
 
 @Composable
@@ -116,10 +116,6 @@ fun AppNavigation() {
         }
 
 
-        composable(route = "checkout") {
-            CheckoutScreen(navController = navController)
-        }
-
         // Admin screens
         composable(route = "admin_dashboard") {
             AdminDashboardScreen(navController = navController)
@@ -149,6 +145,10 @@ fun AppNavigation() {
 
         composable("cart") {
             CartScreen(navController)
+        }
+
+        composable("checkout") {
+            CheckoutScreen(navController)
         }
 
     }
