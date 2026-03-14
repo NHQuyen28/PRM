@@ -115,6 +115,14 @@ fun ProfileScreen(
                     }
 
                     item {
+                        ProfileInfoCardsModern(profile)
+                    }
+
+                    item {
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+
+                    item {
 
                         Button(
                             onClick = {
@@ -129,14 +137,6 @@ fun ProfileScreen(
                         ) {
                             Text("Update Profile")
                         }
-                    }
-
-                    item {
-                        ProfileInfoCardsModern(profile)
-                    }
-
-                    item {
-                        Spacer(modifier = Modifier.height(20.dp))
                     }
 
                     item {
@@ -424,7 +424,10 @@ fun ProfileScreen(
                             )
 
                             showEditDialog = false
-                        }
+                        },colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4CAF50),
+                            contentColor = Color.White
+                        )
                     ) {
                         Text("Save")
                     }
@@ -434,7 +437,11 @@ fun ProfileScreen(
                 dismissButton = {
 
                     TextButton(
-                        onClick = { showEditDialog = false }
+                        onClick = { showEditDialog = false },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFE53935),
+                            contentColor = Color.White
+                        )
                     ) {
                         Text("Cancel")
                     }

@@ -47,13 +47,10 @@ fun AddressSelectorDialog(
                             }
                             .padding(12.dp)
                     ) {
-
                         Text(address.recipientName)
-
                         Text(address.phone)
-
                         Text(address.fullAddress)
-
+                        Text("--------------------------------------------")
                     }
 
                 }
