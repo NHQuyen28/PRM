@@ -11,20 +11,23 @@ import java.security.cert.X509Certificate
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
+import android.util.Log
 
 object RetrofitClient {
+    private const val TAG = "RetrofitClient"
     // Change this to your backend URL
     // For localhost: https://10.0.2.2:5001/api/ (Android emulator - HTTPS)
     // For real device: https://YOUR_MACHINE_IP:5001/api/
-    //private const val BASE_URL = "https://10.0.2.2:5001/api/"
+    private const val BASE_URL = "https://10.0.2.2:5001/api/"
 
-    private const val BASE_URL = "http://10.0.2.2:5000/api/"
+    // OLD: private const val BASE_URL = "http://10.0.2.2:5000/api/"
 
     // Will be initialized from the app layer so that we can attach tokens
     @Volatile
     var sessionManager: SessionManager? = null
 
     fun initSessionManager(manager: SessionManager) {
+        Log.d(TAG, "initSessionManager called with token: ${manager.getAccessToken()}")
         sessionManager = manager
     }
 
@@ -37,9 +40,15 @@ object RetrofitClient {
         val originalRequest = chain.request()
         val token = sessionManager?.getAccessToken()
 
+        Log.d(TAG, "authInterceptor: token = $token")
+        Log.d(TAG, "authInterceptor: sessionManager = ${sessionManager != null}")
+
         val newRequestBuilder = originalRequest.newBuilder()
         if (!token.isNullOrBlank()) {
+            Log.d(TAG, "Adding Authorization header with token: Bearer $token")
             newRequestBuilder.addHeader("Authorization", "Bearer $token")
+        } else {
+            Log.w(TAG, "Warning: No token found, request will be sent without Authorization header")
         }
 
         chain.proceed(newRequestBuilder.build())

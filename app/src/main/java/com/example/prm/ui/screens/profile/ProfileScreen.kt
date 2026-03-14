@@ -1,4 +1,4 @@
-package com.example.prm.ui.screens.profile
+﻿package com.example.prm.ui.screens.profile
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -46,11 +46,13 @@ import com.example.prm.data.remote.dto.OrderResponse
 @Composable
 fun ProfileScreen(
     navController: NavHostController,
-    viewModel: ProfileViewModel = viewModel()
+    viewModel: ProfileViewModel = viewModel(),
+    sessionManager: SessionManager? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-    val sessionManager = remember { SessionManager(context) }
+    // Use the provided sessionManager or create a new one if not provided
+    val actualSessionManager = sessionManager ?: SessionManager(context)
 
     var avatarBase64 by remember { mutableStateOf("") }
     var avatarPreview by remember { mutableStateOf<Uri?>(null) }
@@ -287,7 +289,7 @@ fun ProfileScreen(
 
                     item {
                         LogoutButtonModern(
-                            sessionManager = sessionManager,
+                            sessionManager = actualSessionManager,
                             navController = navController
                         )
                     }
