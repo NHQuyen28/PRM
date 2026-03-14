@@ -1,6 +1,7 @@
 package com.example.prm.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -29,7 +30,8 @@ fun AppNavigation() {
     
     // Check if user is already logged in
     val context = LocalContext.current
-    val sessionManager = SessionManager(context)
+    // Create a single SessionManager instance that will be shared across all screens
+    val sessionManager = remember { SessionManager(context) }
 
     // Initialize Retrofit with the current session so that all API calls use the token
     RetrofitClient.initSessionManager(sessionManager)
@@ -53,7 +55,8 @@ fun AppNavigation() {
             val autoExpand = backStackEntry.arguments?.getBoolean("autoExpand") ?: false
             LoginScreen(
                 navController = navController,
-                autoExpand = autoExpand
+                autoExpand = autoExpand,
+                sessionManager = sessionManager
             )
         }
 
@@ -69,7 +72,8 @@ fun AppNavigation() {
             val autoExpand = backStackEntry.arguments?.getBoolean("autoExpand") ?: true
             RegisterScreen(
                 navController = navController,
-                autoExpand = autoExpand
+                autoExpand = autoExpand,
+                sessionManager = sessionManager
             )
         }
 
@@ -160,7 +164,7 @@ fun AppNavigation() {
             )
         }
         composable("profile") {
-            ProfileScreen(navController)
+            ProfileScreen(navController, sessionManager = sessionManager)
         }
 
         composable("cart") {

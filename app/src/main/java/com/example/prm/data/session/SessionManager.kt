@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.example.prm.data.remote.dto.AuthResponse
 import com.example.prm.utils.TokenManager
+import android.util.Log
 
 class SessionManager(context: Context) {
     private val sharedPref: SharedPreferences = context.getSharedPreferences(
@@ -12,6 +13,7 @@ class SessionManager(context: Context) {
     )
 
     companion object {
+        private const val TAG = "SessionManager"
         private const val KEY_ACCESS_TOKEN = "access_token"
         private const val KEY_REFRESH_TOKEN = "refresh_token"
         private const val KEY_EXPIRES_AT = "expires_at"
@@ -24,6 +26,7 @@ class SessionManager(context: Context) {
     }
 
     fun saveAuthResponse(authResponse: AuthResponse) {
+        Log.d(TAG, "saveAuthResponse: saving token = ${authResponse.accessToken.take(20)}...")
         sharedPref.edit().apply {
             putString(KEY_ACCESS_TOKEN, authResponse.accessToken)
             putString(KEY_REFRESH_TOKEN, authResponse.refreshToken)
@@ -38,13 +41,19 @@ class SessionManager(context: Context) {
         }.apply()
 
         TokenManager.saveToken(authResponse.accessToken)
+        Log.d(TAG, "saveAuthResponse: token saved successfully")
     }
 
     fun saveToken(token: String) {
+        Log.d(TAG, "saveToken: saving token = ${token.take(20)}...")
         sharedPref.edit().putString(KEY_ACCESS_TOKEN, token).apply()
     }
 
-    fun getAccessToken(): String? = sharedPref.getString(KEY_ACCESS_TOKEN, null)
+    fun getAccessToken(): String? {
+        val token = sharedPref.getString(KEY_ACCESS_TOKEN, null)
+        Log.d(TAG, "getAccessToken: token = ${if (token != null) token.take(20) + "..." else "null"}")
+        return token
+    }
     fun getRefreshToken(): String? = sharedPref.getString(KEY_REFRESH_TOKEN, null)
 
     fun saveUserInfo(userId: String, email: String, name: String, phone: String? = null, avatar: String? = null) {

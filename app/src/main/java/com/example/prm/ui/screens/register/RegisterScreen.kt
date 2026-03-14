@@ -26,12 +26,14 @@ import com.example.prm.ui.viewmodel.AuthViewModelFactory
 @Composable
 fun RegisterScreen(
     navController: NavHostController,
-    autoExpand: Boolean = true
+    autoExpand: Boolean = true,
+    sessionManager: SessionManager? = null
 ) {
     val context = LocalContext.current
-    val sessionManager = SessionManager(context)
+    // Use the provided sessionManager or create a new one if not provided
+    val actualSessionManager = sessionManager ?: SessionManager(context)
     val viewModel: RegisterViewModel = viewModel(
-        factory = AuthViewModelFactory(sessionManager)
+        factory = AuthViewModelFactory(actualSessionManager)
     )
     val uiState by viewModel.uiState.collectAsState()
     var isExpanded by remember { mutableStateOf(autoExpand) }
