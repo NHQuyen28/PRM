@@ -471,17 +471,7 @@ private fun ModernProductGridCard(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Add to Cart Button
-                Button(
-                    onClick = onAddClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(36.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PurpleJobsly),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("Add to Cart", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                }
+
             }
         }
     }
