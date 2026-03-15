@@ -1,10 +1,13 @@
 package com.example.prm.ui.screens.product_detail
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -76,12 +79,21 @@ fun ProductDetailScreen(
         },
         bottomBar = {
             if (uiState.product != null) {
+                // Lấy giá linh động: Ưu tiên giá của Variant đang chọn, nếu ko có thì lấy giá gốc
+                val currentPrice = uiState.selectedVariant?.finalPrice ?: uiState.product!!.basePrice
+
                 BottomCartBar(
-                    price = uiState.product!!.basePrice,
+                    price = currentPrice,
                     quantity = quantity,
                     onQuantityChange = { quantity = it },
                     isAdding = uiState.isAddingToCart,
-                    onAddToCart = { viewModel.addToCart(productId, quantity) }
+                    // Không cho bấm nếu chưa chọn biến thể
+                    isEnabled = uiState.selectedVariant != null,
+                    onAddToCart = {
+                        uiState.selectedVariant?.let { variant ->
+                            viewModel.addToCart(variant.id, quantity) // Truyền ID của Biến thể
+                        }
+                    }
                 )
             }
         }
@@ -96,6 +108,9 @@ fun ProductDetailScreen(
             }
         } else if (uiState.product != null) {
             val product = uiState.product!!
+            // Tính giá hiện hành
+            val currentPrice = uiState.selectedVariant?.finalPrice ?: product.basePrice
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -119,7 +134,6 @@ fun ProductDetailScreen(
                             )
                         }
 
-                        // Chấm tròn báo hiệu chuyển ảnh
                         if (images.size > 1) {
                             Row(
                                 modifier = Modifier
@@ -141,7 +155,7 @@ fun ProductDetailScreen(
                     }
                 }
 
-                // 2. Product Info
+                // 2. Product Info & Price
                 item {
                     Column(
                         modifier = Modifier
@@ -149,26 +163,18 @@ fun ProductDetailScreen(
                             .background(Color.White)
                             .padding(16.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            Text(
-                                text = product.productName,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.weight(1f),
-                                lineHeight = 28.sp
-                            )
-                        }
+                        Text(
+                            text = product.productName,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            lineHeight = 28.sp
+                        )
 
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Star, contentDescription = "Rating", tint = Color(0xFFFFC107), modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            // Đã fix lỗi averageRating và totalReviews bằng cách gán cứng
                             Text("4.8", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                             Text(" (128 reviews)", color = Color.Gray, fontSize = 14.sp)
                         }
@@ -177,14 +183,14 @@ fun ProductDetailScreen(
 
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text(
-                                text = "₩${String.format("%,d", product.basePrice.toLong())}",
+                                text = "₩${String.format("%,d", currentPrice.toLong())}", // Giá update theo biến thể
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = PurpleJobsly
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = "₩${String.format("%,d", (product.basePrice * 1.25).toLong())}",
+                                text = "₩${String.format("%,d", (currentPrice * 1.25).toLong())}",
                                 fontSize = 16.sp,
                                 color = Color.Gray,
                                 textDecoration = TextDecoration.LineThrough,
@@ -194,7 +200,47 @@ fun ProductDetailScreen(
                     }
                 }
 
-                // 3. Description
+                // 3. Variant Selection (Lựa chọn kích cỡ/màu sắc...)
+                if (!product.variants.isNullOrEmpty()) {
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.White)
+                                .padding(16.dp)
+                        ) {
+                            Text("Select Option", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                items(product.variants.filter { it.isActive }) { variant ->
+                                    val isSelected = uiState.selectedVariant?.id == variant.id
+
+                                    // Tạo tên nhãn hiển thị (VD: "Đỏ - 3U" hoặc "Size 40")
+                                    val props = listOfNotNull(variant.color, variant.size, variant.weight).filter { it.isNotBlank() }
+                                    val variantName = if (props.isNotEmpty()) props.joinToString(" - ") else variant.sku
+
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        border = BorderStroke(1.dp, if (isSelected) PurpleJobsly else Color(0xFFE0E0E0)),
+                                        color = if (isSelected) PurpleJobsly.copy(alpha = 0.1f) else Color.White,
+                                        modifier = Modifier.clickable { viewModel.selectVariant(variant) }
+                                    ) {
+                                        Text(
+                                            text = variantName,
+                                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                                            color = if (isSelected) PurpleJobsly else Color.DarkGray,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 4. Description
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
                     Column(
@@ -212,7 +258,7 @@ fun ProductDetailScreen(
                             lineHeight = 22.sp
                         )
                     }
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(30.dp))
                 }
             }
         }
@@ -225,6 +271,7 @@ private fun BottomCartBar(
     quantity: Int,
     onQuantityChange: (Int) -> Unit,
     isAdding: Boolean,
+    isEnabled: Boolean, // Thêm cờ để khoá nút nếu chưa chọn variant
     onAddToCart: () -> Unit
 ) {
     Surface(
@@ -271,14 +318,16 @@ private fun BottomCartBar(
                 onClick = onAddToCart,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(start = 16.dp) // Đã fix lỗi padding "left" thành "start"
+                    .padding(start = 16.dp)
                     .height(48.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = PurpleJobsly),
                 shape = RoundedCornerShape(12.dp),
-                enabled = !isAdding
+                enabled = !isAdding && isEnabled // Khoá nút nếu đang loading hoặc chưa chọn biến thể
             ) {
                 if (isAdding) {
                     CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                } else if (!isEnabled) {
+                    Text("Select Option", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 } else {
                     Text(
                         "Add ₩${String.format("%,d", (price * quantity).toLong())}",

@@ -25,7 +25,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import com.example.prm.data.remote.dto.cart.CartItemDto
+import com.example.prm.data.remote.dto.CartDataDto
+import com.example.prm.data.remote.dto.CartItemDto
 import com.example.prm.ui.theme.PurpleJobsly
 
 @Composable
@@ -226,7 +227,7 @@ private fun EmptyCartMessage(navController: NavHostController) {
 
 @Composable
 private fun CartWithItems(
-    cart: com.example.prm.data.remote.dto.cart.CartDataDto,
+    cart: CartDataDto,
     viewModel: CartViewModel,
     navController: NavHostController
 ) {
@@ -385,7 +386,7 @@ private fun ModernCartItemCard(
 
 @Composable
 private fun CartSummarySection(
-    cart: com.example.prm.data.remote.dto.cart.CartDataDto,
+    cart: CartDataDto,
     navController: NavHostController
 ) {
     Box(

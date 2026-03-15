@@ -1,6 +1,6 @@
 package com.example.prm.ui.screens.cart
 
-import com.example.prm.data.remote.dto.cart.CartDataDto
+import com.example.prm.data.remote.dto.CartDataDto
 
 data class CartUiState(
 

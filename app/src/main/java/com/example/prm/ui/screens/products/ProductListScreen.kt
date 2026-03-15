@@ -367,18 +367,20 @@ private fun SortBar(sortBy: String, onSortChange: (String) -> Unit) {
 
 // ==================== PRODUCT GRID CARD ====================
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ModernProductGridCard(
     product: Product,
     onProductClick: () -> Unit,
-    onAddClick: () -> Unit
+    onAddClick: () -> Unit // Cứ giữ tham số này để không phải sửa lời gọi hàm ở trên
 ) {
+    // SỬ DỤNG THUỘC TÍNH ONCLICK CỦA SURFACE ĐỂ ĐẢM BẢO CẢM ỨNG 100% NHẠY
     Surface(
-        modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .clickable { onProductClick() }
-            .shadow(elevation = 4.dp, shape = RoundedCornerShape(14.dp)),
-        color = Color.White
+        onClick = onProductClick,
+        shape = RoundedCornerShape(14.dp),
+        shadowElevation = 4.dp,
+        color = Color.White,
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             // Product Image
@@ -399,9 +401,9 @@ private fun ModernProductGridCard(
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopStart)
+                        .padding(8.dp) // Gộp padding ra ngoài cho gọn
                         .background(Color(0xFFFF6B6B), shape = RoundedCornerShape(8.dp))
                         .padding(horizontal = 8.dp, vertical = 4.dp)
-                        .padding(8.dp)
                 ) {
                     Text(
                         "-20%",
@@ -411,7 +413,7 @@ private fun ModernProductGridCard(
                     )
                 }
 
-                // Wishlist
+                // Wishlist (Đã bỏ dòng .clickable { } trống để tránh nuốt click của thẻ gốc)
                 Icon(
                     Icons.Default.Favorite,
                     contentDescription = "Add to Wishlist",
@@ -420,7 +422,6 @@ private fun ModernProductGridCard(
                         .align(Alignment.TopEnd)
                         .padding(8.dp)
                         .size(24.dp)
-                        .clickable { }
                 )
             }
 
@@ -470,8 +471,6 @@ private fun ModernProductGridCard(
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
-
-
             }
         }
     }
