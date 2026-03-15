@@ -29,12 +29,14 @@ import kotlinx.coroutines.launch
 @Composable
 fun LoginScreen(
     navController: NavHostController,
-    autoExpand: Boolean = false  // ✅ Thêm tham số này
+    autoExpand: Boolean = false,
+    sessionManager: SessionManager? = null
 ) {
     val context = LocalContext.current
-    val sessionManager = SessionManager(context)
+    // Use the provided sessionManager or create a new one if not provided
+    val actualSessionManager = sessionManager ?: SessionManager(context)
     val viewModel: LoginViewModel = viewModel(
-        factory = AuthViewModelFactory(sessionManager)
+        factory = AuthViewModelFactory(actualSessionManager)
     )
     val uiState by viewModel.uiState.collectAsState()
 
