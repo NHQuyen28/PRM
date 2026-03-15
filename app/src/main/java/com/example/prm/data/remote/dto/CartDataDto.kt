@@ -1,4 +1,4 @@
-package com.example.prm.data.remote.dto.cart
+package com.example.prm.data.remote.dto
 
 import com.google.gson.annotations.SerializedName
 

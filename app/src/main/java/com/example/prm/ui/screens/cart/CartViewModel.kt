@@ -16,31 +16,22 @@ class CartViewModel : ViewModel() {
     val uiState: StateFlow<CartUiState> = _uiState
 
     fun loadCart() {
-
         viewModelScope.launch {
-
             _uiState.value = CartUiState(isLoading = true)
 
             when (val result = repository.getCart()) {
-
                 is ResultState.Success -> {
                     _uiState.value = CartUiState(cart = result.data)
                 }
-
                 is ResultState.Error -> {
                     _uiState.value = CartUiState(error = result.message)
                 }
-
                 else -> {}
             }
         }
     }
 
-    fun updateQuantity(
-        cartItemId: String,
-        quantity: Int
-    ) {
-
+    fun updateQuantity(cartItemId: String, quantity: Int) {
         val currentCart = _uiState.value.cart ?: return
 
         val updatedItems = currentCart.items.map {
@@ -58,11 +49,13 @@ class CartViewModel : ViewModel() {
 
         // CALL API BACKGROUND
         viewModelScope.launch {
-
-            val result = repository.updateCart(cartItemId, quantity)
-
-            if (result is ResultState.Error) {
-                loadCart() // rollback
+            // ĐÃ SỬA 1: Đổi thành updateCartItem thay vì updateCart
+            // ĐÃ SỬA 2: Dùng cấu trúc when thay cho if để không bị lỗi Generic Type
+            when (repository.updateCartItem(cartItemId, quantity)) {
+                is ResultState.Error -> {
+                    loadCart() // rollback lại giỏ hàng cũ nếu API báo lỗi
+                }
+                else -> {}
             }
         }
     }
@@ -81,11 +74,13 @@ class CartViewModel : ViewModel() {
 
         // CALL API BACKGROUND
         viewModelScope.launch {
-            val result = repository.removeFromCart(cartItemId)
-            if (result is ResultState.Error) {
-                loadCart() // rollback
+            // ĐÃ SỬA 2: Dùng cấu trúc when thay cho if
+            when (repository.removeFromCart(cartItemId)) {
+                is ResultState.Error -> {
+                    loadCart() // rollback lại giỏ hàng cũ nếu API báo lỗi
+                }
+                else -> {}
             }
         }
     }
-
 }
