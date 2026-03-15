@@ -6,10 +6,15 @@ import retrofit2.http.*
 
 interface OrderApi {
 
+//    @POST("Order")
+//    suspend fun createOrder(
+//        @Body request: CreateOrderRequest
+//    ): Response<OrderResponse>
+
     @POST("Order")
     suspend fun createOrder(
         @Body request: CreateOrderRequest
-    ): Response<Unit>
+    ): Response<ApiResponse<OrderResponse>>
 
     @GET("order")
     suspend fun getOrders(

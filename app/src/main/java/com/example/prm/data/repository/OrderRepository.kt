@@ -10,16 +10,26 @@ class OrderRepository {
 
     private val api = RetrofitClient.createService(OrderApi::class.java)
 
-    suspend fun createOrder(request: CreateOrderRequest): ResultState<Unit> {
+    suspend fun createOrder(request: CreateOrderRequest): ResultState<OrderResponse> {
 
         return try {
 
             val response = api.createOrder(request)
 
             if (response.isSuccessful) {
-                ResultState.Success(Unit)
+
+                val order = response.body()?.data
+
+                if (order != null) {
+                    ResultState.Success(order)
+                } else {
+                    ResultState.Error("Order null")
+                }
+
             } else {
+
                 ResultState.Error("Create order failed")
+
             }
 
         } catch (e: Exception) {

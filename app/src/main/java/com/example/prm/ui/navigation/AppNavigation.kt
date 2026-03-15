@@ -22,6 +22,7 @@ import com.example.prm.ui.screens.admin.AdminAddVoucherScreen
 import com.example.prm.ui.screens.admin.AdminEditProductScreen
 import com.example.prm.ui.screens.checkout.CheckoutScreen
 import com.example.prm.ui.screens.admin.AdminEditVoucherScreen
+import com.example.prm.ui.screens.payment.PaymentResultScreen
 import com.example.prm.ui.screens.profile.ProfileScreen
 
 @Composable
@@ -173,6 +174,30 @@ fun AppNavigation() {
 
         composable("checkout") {
             CheckoutScreen(navController)
+        }
+
+        composable(
+            route = "payment_result?orderId={orderId}&resultCode={resultCode}",
+            arguments = listOf(
+                navArgument("orderId") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                },
+                navArgument("resultCode") {
+                    type = NavType.StringType
+                    defaultValue = "-1"
+                }
+            )
+        ) { backStackEntry ->
+
+            val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
+            val resultCode = backStackEntry.arguments?.getString("resultCode") ?: "-1"
+
+            PaymentResultScreen(
+                navController = navController,
+                orderId = orderId,
+                resultCode = resultCode
+            )
         }
 
     }

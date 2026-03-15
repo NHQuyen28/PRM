@@ -7,6 +7,7 @@ import com.example.prm.data.remote.dto.CreateOrderRequest
 import com.example.prm.data.repository.AddressRepository
 import com.example.prm.data.repository.CartRepository
 import com.example.prm.data.repository.OrderRepository
+import com.example.prm.data.repository.PaymentRepository
 import com.example.prm.utils.ResultState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +20,8 @@ class CheckoutViewModel : ViewModel() {
     private val orderRepository = OrderRepository()
 
     private val cartRepository = CartRepository()
+
+    private val paymentRepository = PaymentRepository()
 
     private val _uiState = MutableStateFlow(CheckoutUiState())
     val uiState: StateFlow<CheckoutUiState> = _uiState
@@ -67,6 +70,7 @@ class CheckoutViewModel : ViewModel() {
         viewModelScope.launch {
 
             val address = _uiState.value.selectedAddress ?: return@launch
+            val cart = _uiState.value.cart ?: return@launch
 
             val request = CreateOrderRequest(
 
@@ -83,10 +87,32 @@ class CheckoutViewModel : ViewModel() {
                 paymentMethod = 0,
 
                 notes = null
-
             )
 
-            orderRepository.createOrder(request)
+            when (val orderResult = orderRepository.createOrder(request)) {
+
+                is ResultState.Success -> {
+
+                    val order = orderResult.data
+
+                    createMomoPayment(
+                        orderId = order.id,
+                        amount = order.totalAmount
+                    )
+
+                }
+
+                is ResultState.Error -> {
+
+                    _uiState.value = _uiState.value.copy(
+                        error = orderResult.message
+                    )
+
+                }
+
+                else -> {}
+
+            }
 
         }
 
@@ -117,6 +143,35 @@ class CheckoutViewModel : ViewModel() {
                 else -> {}
 
             }
+
+        }
+
+    }
+
+    private suspend fun createMomoPayment(
+        orderId: String,
+        amount: Double
+    ) {
+
+        when (val result = paymentRepository.createMomoPayment(orderId, amount)) {
+
+            is ResultState.Success -> {
+
+                _uiState.value = _uiState.value.copy(
+                    paymentUrl = result.data
+                )
+
+            }
+
+            is ResultState.Error -> {
+
+                _uiState.value = _uiState.value.copy(
+                    error = result.message
+                )
+
+            }
+
+            else -> {}
 
         }
 

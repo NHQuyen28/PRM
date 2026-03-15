@@ -13,6 +13,10 @@ data class CheckoutUiState(
 
     val isLoading: Boolean = false,
 
-    val error: String? = null
+    val error: String? = null,
+
+    val paymentUrl: String? = null,
+
+    val paymentResult: String? = null
 
 )
