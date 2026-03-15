@@ -563,15 +563,33 @@ private fun BestSellingProductsSection(
                 color = PurpleJobsly
             )
         } else {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            // SỬ DỤNG CHUNKED ĐỂ TẠO GRID 2 CỘT
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(products.take(6)) { product ->
-                    ModernProductCard(
-                        product = product,
-                        onProductClick = { navController.navigate("product_detail/${product.id}") },
-                        onAddClick = { onAddToCart(product) }
-                    )
+                // Lấy tối đa 6 sản phẩm (hoặc bạn có thể bỏ .take(6) để hiện hết)
+                val displayProducts = products.take(6)
+                val chunkedProducts = displayProducts.chunked(2)
+
+                chunkedProducts.forEach { rowProducts ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        rowProducts.forEach { product ->
+                            Box(modifier = Modifier.weight(1f)) {
+                                ModernProductGridCard(
+                                    product = product,
+                                    onProductClick = { navController.navigate("product_detail/${product.id}") },
+                                    onAddClick = { onAddToCart(product) }
+                                )
+                            }
+                        }
+                        // Nếu hàng cuối cùng chỉ có 1 sản phẩm (lẻ), thêm 1 khoảng trống để đẩy nó sang trái
+                        if (rowProducts.size == 1) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
                 }
             }
         }
@@ -579,25 +597,24 @@ private fun BestSellingProductsSection(
 }
 
 @Composable
-private fun ModernProductCard(
+private fun ModernProductGridCard(
     product: Product,
     onProductClick: () -> Unit,
     onAddClick: () -> Unit
 ) {
     Surface(
         modifier = Modifier
-            .width(160.dp)
             .clip(RoundedCornerShape(14.dp))
             .clickable { onProductClick() }
             .shadow(elevation = 4.dp, shape = RoundedCornerShape(14.dp)),
         color = Color.White
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            // Product Image with Badge
+            // Product Image
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(150.dp)
+                    .height(160.dp)
                     .background(Color(0xFFF5F5F5))
             ) {
                 AsyncImage(
@@ -606,7 +623,23 @@ private fun ModernProductCard(
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
-                // Wishlist Badge
+
+                // Badge
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .background(Color(0xFFFF6B6B), shape = RoundedCornerShape(8.dp))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        "-20%",
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // Wishlist
                 Icon(
                     Icons.Default.Favorite,
                     contentDescription = "Add to Wishlist",
@@ -646,12 +679,23 @@ private fun ModernProductCard(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Price
-                Text(
-                    "₩${String.format("%,d", product.price.toInt())}",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = PurpleJobsly
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        "₩${String.format("%,d", product.price.toInt())}",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = PurpleJobsly
+                    )
+                    Text(
+                        "₩${String.format("%,d", (product.price * 1.25).toInt())}",
+                        fontSize = 12.sp,
+                        color = Color(0xFF999),
+                        textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -664,7 +708,7 @@ private fun ModernProductCard(
                     colors = ButtonDefaults.buttonColors(containerColor = PurpleJobsly),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Add", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text("Add to Cart", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
