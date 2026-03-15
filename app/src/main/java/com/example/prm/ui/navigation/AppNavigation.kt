@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.example.prm.data.remote.RetrofitClient
 import com.example.prm.data.session.SessionManager
 import com.example.prm.ui.screens.cart.CartScreen
@@ -179,13 +180,12 @@ fun AppNavigation() {
         composable(
             route = "payment_result?orderId={orderId}&resultCode={resultCode}",
             arguments = listOf(
-                navArgument("orderId") {
-                    type = NavType.StringType
-                    defaultValue = ""
-                },
-                navArgument("resultCode") {
-                    type = NavType.StringType
-                    defaultValue = "-1"
+                navArgument("orderId") { type = NavType.StringType },
+                navArgument("resultCode") { type = NavType.StringType }
+            ),
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = "badmintonshop://payment-result?orderId={orderId}&resultCode={resultCode}"
                 }
             )
         ) { backStackEntry ->
