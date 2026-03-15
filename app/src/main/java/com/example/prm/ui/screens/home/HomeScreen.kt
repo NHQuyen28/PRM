@@ -39,6 +39,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import kotlinx.coroutines.delay
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.MarkerState
 
 @Composable
 fun HomeScreen(
@@ -112,13 +118,19 @@ fun HomeScreen(
                     products = uiState.products,
                     isLoading = uiState.isLoading,
                     navController = navController,
-                    onAddToCart = { product -> viewModel.addToCart(product.id) }
+                    // TẠM THỜI BỎ TRỐNG LỆNH NÀY VÌ ĐÃ ẨN NÚT ADD TO CART
+                    onAddToCart = { /* Không làm gì cả */ }
                 )
             }
 
             // View All Products CTA
             item {
                 ViewAllProductsCTA(navController = navController)
+            }
+
+            // Shop Location Map
+            item {
+                ShopLocationMap()
             }
 
             item {
@@ -732,6 +744,132 @@ private fun ViewAllProductsCTA(navController: NavHostController) {
             fontSize = 16.sp,
             fontWeight = FontWeight.ExtraBold
         )
+    }
+}
+
+// ==================== SHOP LOCATION ====================
+
+@Composable
+private fun ShopLocationMap() {
+    val shopLatitude = 10.7769  // Saigon coordinates
+    val shopLongitude = 106.6869
+    val location = LatLng(shopLatitude, shopLongitude)
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(location, 16f)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        // Title
+        Text(
+            "📍 Our Shop Location",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = PurpleJobsly,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+
+        // Map Container
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .shadow(elevation = 4.dp, shape = RoundedCornerShape(16.dp)),
+            color = Color.White
+        ) {
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState
+            ) {
+                Marker(
+                    state = MarkerState(position = location),
+                    title = "Badmini Shop",
+                    snippet = "Badminton Equipment Store\nHo Chi Minh City, Vietnam"
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Shop Info Card
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .shadow(elevation = 2.dp),
+            color = Color.White
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Text("🏪", fontSize = 24.sp)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            "Badmini Shop",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = PurpleJobsly
+                        )
+                        Text(
+                            "Ho Chi Minh City, Vietnam",
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                    }
+                }
+
+                Divider(color = Color(0xFFEEE))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("📞", fontSize = 18.sp)
+                    Text(
+                        "+84 (0) 1234-5678",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("📧", fontSize = 18.sp)
+                    Text(
+                        "support@badmini.com",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("🕒", fontSize = 18.sp)
+                    Text(
+                        "9:00 AM - 6:00 PM (Daily)",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
+            }
+        }
     }
 }
 

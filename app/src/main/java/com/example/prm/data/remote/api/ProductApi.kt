@@ -7,8 +7,13 @@ import retrofit2.http.*
 interface ProductApi {
     @GET("Product")
     suspend fun getProducts(
-        @Query("Page") page: Int = 1,
-        @Query("PageSize") pageSize: Int = 20
+        @Query("page") page: Int = 1,
+        @Query("pageSize") pageSize: Int = 20,
+        @Query("search") search: String? = null,
+        @Query("categoryId") categoryId: String? = null,
+        @Query("brandId") brandId: String? = null,
+        @Query("sortBy") sortBy: String? = null,
+        @Query("isAscending") isAscending: Boolean = true
     ): Response<ApiResponse<ProductListResponse>>
 
     @GET("Product/{id}")
@@ -46,16 +51,23 @@ interface ProductApi {
     @POST("Product")
     suspend fun createProduct(@Body request: CreateProductRequest): Response<ApiResponse<ProductResp>>
 
+    // ĐÃ CHUẨN HÓA CẤU TRÚC BODY CHỈ CÓ REQUEST
     @PUT("Product")
     suspend fun updateProduct(@Body request: UpdateProductRequest): Response<ApiResponse<ProductResp>>
 
     @DELETE("Product/{id}")
-    suspend fun deleteProduct(@Path("id") productId: String): Response<ApiResponse<Unit>>
+    suspend fun deleteProduct(@Path("id") productId: String): Response<ApiResponse<Boolean>>
 
     @POST("Product/{productId}/variant")
     suspend fun addProductVariant(
         @Path("productId") productId: String,
         @Body request: CreateProductVariantRequest
+    ): Response<ApiResponse<ProductVariantResp>>
+
+    // ĐÃ THÊM: API UPDATE VARIANT THEO CHUẨN BACKEND
+    @PUT("Product/variant")
+    suspend fun updateProductVariant(
+        @Body request: UpdateProductVariantRequest
     ): Response<ApiResponse<ProductVariantResp>>
 }
 
@@ -95,4 +107,14 @@ data class CreateProductVariantRequest(
     val priceAdjustment: Double = 0.0,
     val stockQuantity: Int,
     val isActive: Boolean = true
+)
+
+// ĐÃ THÊM: BODY CHO UPDATE VARIANT
+data class UpdateProductVariantRequest(
+    val id: String,
+    val size: String? = null,
+    val color: String? = null,
+    val priceAdjustment: Double,
+    val stockQuantity: Int,
+    val isActive: Boolean
 )
