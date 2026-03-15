@@ -1,93 +1,93 @@
 package com.example.prm.data.repository
 
+import android.util.Log
 import com.example.prm.data.remote.RetrofitClient
+import com.example.prm.data.remote.api.AddToCartRequest
 import com.example.prm.data.remote.api.CartApi
+import com.example.prm.data.remote.dto.CartDataDto
 import com.example.prm.data.remote.dto.UpdateCartRequest
-import com.example.prm.data.remote.dto.cart.CartDataDto
 import com.example.prm.utils.ResultState
 
 class CartRepository {
-
-    private val api = RetrofitClient.createService(CartApi::class.java)
+    private val cartApi = RetrofitClient.createService(CartApi::class.java)
+    private val TAG = "CartRepository"
 
     suspend fun getCart(): ResultState<CartDataDto> {
         return try {
-
-            val response = api.getCart()
-
-            if (response.isSuccessful) {
-
-                val body = response.body()
-
-                if (body?.success == true && body.data != null) {
-                    ResultState.Success(body.data)
+            val response = cartApi.getCart()
+            if (response.isSuccessful && response.body() != null) {
+                val apiResponse = response.body()!!
+                if (apiResponse.success && apiResponse.data != null) {
+                    ResultState.Success(apiResponse.data)
                 } else {
-                    ResultState.Error(body?.message ?: "Failed to load cart")
+                    ResultState.Error(apiResponse.message ?: "Failed to get cart")
                 }
-
             } else {
-                ResultState.Error("API Error ${response.code()}")
+                ResultState.Error("HTTP Error ${response.code()}")
             }
-
         } catch (e: Exception) {
-            ResultState.Error(e.message ?: "Unknown error")
+            Log.e(TAG, "Exception getting cart", e)
+            ResultState.Error(e.message ?: "Network error")
         }
     }
 
-    suspend fun updateCart(
-        cartItemId: String,
-        quantity: Int
-    ): ResultState<String> {
-
+    suspend fun addToCart(productVariantId: String, quantity: Int): ResultState<String> {
         return try {
-
-            val response = api.updateCart(
-                UpdateCartRequest(cartItemId, quantity)
-            )
-
+            val request = AddToCartRequest(productVariantId, quantity)
+            val response = cartApi.addToCart(request)
             if (response.isSuccessful && response.body() != null) {
-
                 val apiResponse = response.body()!!
-
                 if (apiResponse.success) {
-                    ResultState.Success("Updated")
+                    ResultState.Success(apiResponse.message ?: "Added to cart successfully")
                 } else {
-                    ResultState.Error(apiResponse.message ?: "Update failed")
+                    ResultState.Error(apiResponse.message ?: "Failed to add to cart")
                 }
-
             } else {
-                ResultState.Error("HTTP ${response.code()}")
+                ResultState.Error("HTTP Error ${response.code()} (Check Token)")
             }
-
         } catch (e: Exception) {
-            ResultState.Error(e.message ?: "Update cart error")
+            Log.e(TAG, "Exception adding to cart", e)
+            ResultState.Error(e.message ?: "Network error")
         }
     }
 
-    suspend fun removeFromCart(
-        cartItemId: String
-    ): ResultState<String> {
-
+    suspend fun updateCartItem(cartItemId: String, quantity: Int): ResultState<String> {
         return try {
-
-            val response = api.removeFromCart(cartItemId)
-
+            val request = UpdateCartRequest(cartItemId, quantity)
+            val response = cartApi.updateCart(request)
             if (response.isSuccessful && response.body() != null) {
-
-                val apiResponse = response.body()!!
-
-                if (apiResponse.success) {
-                    ResultState.Success("Removed")
-                } else {
-                    ResultState.Error(apiResponse.message ?: "Remove failed")
-                }
-
+                ResultState.Success(response.body()!!.message ?: "Updated successfully")
             } else {
-                ResultState.Error("HTTP ${response.code()}")
+                ResultState.Error("HTTP Error ${response.code()}")
             }
-
         } catch (e: Exception) {
-            ResultState.Error(e.message ?: "Remove from cart error")
+            ResultState.Error(e.message ?: "Network error")
+        }
+    }
+
+    suspend fun removeFromCart(cartItemId: String): ResultState<String> {
+        return try {
+            val response = cartApi.removeFromCart(cartItemId)
+            if (response.isSuccessful && response.body() != null) {
+                ResultState.Success(response.body()!!.message ?: "Removed successfully")
+            } else {
+                ResultState.Error("HTTP Error ${response.code()}")
+            }
+        } catch (e: Exception) {
+            ResultState.Error(e.message ?: "Network error")
+        }
+    }
+
+    suspend fun clearCart(): ResultState<String> {
+        return try {
+            val response = cartApi.clearCart()
+            if (response.isSuccessful && response.body() != null) {
+                ResultState.Success(response.body()!!.message ?: "Cleared successfully")
+            } else {
+                ResultState.Error("HTTP Error ${response.code()}")
+            }
+        } catch (e: Exception) {
+            ResultState.Error(e.message ?: "Network error")
         }
     }
 }

@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -67,6 +69,9 @@ fun ProfileScreen(
 
     var showEditAddressDialog by remember { mutableStateOf(false) }
     var editingAddress by remember { mutableStateOf<AddressResponse?>(null) }
+
+    var showMapDialog by remember { mutableStateOf(false) }
+    var selectedAddressForMap by remember { mutableStateOf<AddressResponse?>(null) }
 
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -273,6 +278,11 @@ fun ProfileScreen(
                                             onEdit = { address ->
                                                 editingAddress = address
                                                 showEditAddressDialog = true
+                                            },
+
+                                            onViewMap = { address ->
+                                                selectedAddressForMap = address
+                                                showMapDialog = true
                                             }
                                         )
 
@@ -684,6 +694,39 @@ fun ProfileScreen(
                 }
             )
         }
+
+        if (showMapDialog && selectedAddressForMap != null) {
+            Dialog(
+                onDismissRequest = { showMapDialog = false },
+                properties = DialogProperties(
+                    usePlatformDefaultWidth = false,
+                    dismissOnBackPress = true
+                )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.5f))
+                ) {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxSize(0.95f)
+                            .align(Alignment.Center),
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color.White
+                    ) {
+                        MapScreen(
+                            onBackClick = { showMapDialog = false },
+                            recipientName = selectedAddressForMap!!.recipientName,
+                            phone = selectedAddressForMap!!.phone,
+                            fullAddress = selectedAddressForMap!!.fullAddress,
+                            latitude = 10.7769,
+                            longitude = 106.6869
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -692,7 +735,8 @@ fun AddressItem(
     address: AddressResponse,
     onSetDefault: (String) -> Unit,
     onDelete: (String) -> Unit,
-    onEdit: (AddressResponse) -> Unit
+    onEdit: (AddressResponse) -> Unit,
+    onViewMap: (AddressResponse) -> Unit
 ) {
 
     Column(
@@ -739,7 +783,7 @@ fun AddressItem(
         Spacer(modifier = Modifier.height(10.dp))
 
         Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
 
@@ -747,27 +791,40 @@ fun AddressItem(
                 onClick = { onSetDefault(address.id) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF27AE60)
-                )
+                ),
+                modifier = Modifier.weight(1f).height(36.dp)
             ) {
-                Text("Set Default")
+                Text("Default", fontSize = 11.sp)
+            }
+
+            Button(
+                onClick = { onViewMap(address) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF00A8FF)
+                ),
+                modifier = Modifier.weight(1f).height(36.dp)
+            ) {
+                Text("Map", fontSize = 11.sp)
             }
 
             Button(
                 onClick = { onEdit(address) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFF39C12)
-                )
+                ),
+                modifier = Modifier.weight(1f).height(36.dp)
             ) {
-                Text("Edit")
+                Text("Edit", fontSize = 11.sp)
             }
 
             Button(
                 onClick = { onDelete(address.id) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFE74C3C)
-                )
+                ),
+                modifier = Modifier.weight(1f).height(36.dp)
             ) {
-                Text("Delete")
+                Text("Delete", fontSize = 11.sp)
             }
         }
     }
