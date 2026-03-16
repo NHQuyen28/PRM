@@ -1,95 +1,60 @@
 package com.example.prm.data.repository
 
-import com.example.prm.data.remote.api.CreateProductRequest
-import com.example.prm.data.remote.api.ProductApi
-import com.example.prm.data.remote.api.UpdateProductRequest
-import com.example.prm.data.remote.dto.*
-import com.example.prm.data.remote.RetrofitClient
-import com.example.prm.utils.ResultState
 import android.util.Log
-import com.google.gson.Gson
+import com.example.prm.data.remote.RetrofitClient
+import com.example.prm.data.remote.api.*
+import com.example.prm.data.remote.dto.ProductResp
+import com.example.prm.data.remote.dto.ProductVariantResp
+import com.example.prm.data.remote.dto.ProductListResponse
+import com.example.prm.utils.ResultState
 
 class ProductRepository {
     private val productApi = RetrofitClient.createService(ProductApi::class.java)
-    private val gson = Gson()
-    
-    companion object {
-        private const val TAG = "ProductRepository"
-    }
-    
+    private val TAG = "ProductRepository"
+
     suspend fun getProducts(
         page: Int = 1,
-        pageSize: Int = 20
+        pageSize: Int = 10,
+        search: String? = null,
+        categoryId: String? = null,
+        brandId: String? = null,
+        sortBy: String? = null,
+        isAscending: Boolean = true
     ): ResultState<ProductListResponse> {
         return try {
-            Log.d(TAG, "Fetching products: page=$page, pageSize=$pageSize")
-            val response = productApi.getProducts(page = page, pageSize = pageSize)
-
+            val response = productApi.getProducts(page, pageSize, search, categoryId, brandId, sortBy, isAscending)
             if (response.isSuccessful && response.body() != null) {
                 val apiResponse = response.body()!!
                 if (apiResponse.success && apiResponse.data != null) {
-                    Log.d(TAG, "Products fetched successfully: ${apiResponse.data.products.size} items")
                     ResultState.Success(apiResponse.data)
                 } else {
-                    val errorMsg = apiResponse.message ?: "Failed to fetch products"
-                    Log.e(TAG, "API returned error: $errorMsg")
-                    ResultState.Error(errorMsg)
+                    ResultState.Error(apiResponse.message ?: "Unknown error")
                 }
             } else {
-                var errorMessage = "HTTP ${response.code()}: Failed to fetch products"
-                try {
-                    val errorBody = response.errorBody()?.string()
-                    if (errorBody != null) {
-                        val errorResponse = gson.fromJson(errorBody, ApiResponse::class.java)
-                        if (errorResponse.message != null) {
-                            errorMessage = errorResponse.message
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error parsing error response", e)
-                }
-                Log.e(TAG, "Failed to fetch products: $errorMessage")
-                ResultState.Error(errorMessage)
+                ResultState.Error("Failed to fetch products: HTTP ${response.code()}")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Exception fetching products", e)
-            ResultState.Error(e.message ?: "Connection error")
+            Log.e(TAG, "Error getting products", e)
+            ResultState.Error(e.message ?: "Network error")
         }
     }
 
-    suspend fun getProductById(productId: String): ResultState<ProductResp> {
+    suspend fun getProductById(id: String): ResultState<ProductResp> {
         return try {
-            Log.d(TAG, "Fetching product by id: $productId")
-            val response = productApi.getProductById(productId)
-
+            val response = productApi.getProductById(id)
             if (response.isSuccessful && response.body() != null) {
                 val apiResponse = response.body()!!
                 if (apiResponse.success && apiResponse.data != null) {
                     ResultState.Success(apiResponse.data)
                 } else {
-                    val errorMsg = apiResponse.message ?: "Failed to load product"
-                    Log.e(TAG, "API returned error: $errorMsg")
-                    ResultState.Error(errorMsg)
+                    ResultState.Error(apiResponse.message ?: "Product not found")
                 }
             } else {
-                var errorMessage = "HTTP ${response.code()}: Failed to load product"
-                try {
-                    val errorBody = response.errorBody()?.string()
-                    if (errorBody != null) {
-                        val errorResponse = gson.fromJson(errorBody, ApiResponse::class.java)
-                        if (errorResponse.message != null) {
-                            errorMessage = errorResponse.message
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error parsing error response", e)
-                }
-                Log.e(TAG, "Failed to load product: $errorMessage")
-                ResultState.Error(errorMessage)
+                ResultState.Error("Failed to get product: HTTP ${response.code()}")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Exception fetching product", e)
-            ResultState.Error(e.message ?: "Connection error")
+            Log.e(TAG, "Error getting product details", e)
+            ResultState.Error(e.message ?: "Network error")
         }
     }
 
@@ -100,54 +65,24 @@ class ProductRepository {
         slug: String?,
         description: String?,
         basePrice: Double,
-        imageUrl: String?, // ĐÃ THÊM THAM SỐ NÀY
-        isActive: Boolean = true
+        imageUrl: String?
     ): ResultState<ProductResp> {
         return try {
-            Log.d(TAG, "Creating product: name=$productName")
-            val request = CreateProductRequest(
-                categoryId = categoryId,
-                brandId = brandId,
-                productName = productName,
-                slug = slug,
-                description = description,
-                basePrice = basePrice,
-                isActive = isActive,
-                variants = null,
-                // ĐÃ SỬA: Biến URL dạng chuỗi thành List để gửi xuống API
-                imageUrls = if (!imageUrl.isNullOrBlank()) listOf(imageUrl) else null
-            )
-
+            val imagesList = if (!imageUrl.isNullOrBlank()) listOf(imageUrl) else null
+            val request = CreateProductRequest(categoryId, brandId, productName, slug, description, basePrice, true, null, imagesList)
             val response = productApi.createProduct(request)
-
             if (response.isSuccessful && response.body() != null) {
                 val apiResponse = response.body()!!
                 if (apiResponse.success && apiResponse.data != null) {
                     ResultState.Success(apiResponse.data)
                 } else {
-                    val errorMsg = apiResponse.message ?: "Failed to create product"
-                    Log.e(TAG, "API returned error: $errorMsg")
-                    ResultState.Error(errorMsg)
+                    ResultState.Error(apiResponse.message ?: "Failed to create product")
                 }
             } else {
-                var errorMessage = "HTTP ${response.code()}: Failed to create product"
-                try {
-                    val errorBody = response.errorBody()?.string()
-                    if (errorBody != null) {
-                        val errorResponse = gson.fromJson(errorBody, ApiResponse::class.java)
-                        if (errorResponse.message != null) {
-                            errorMessage = errorResponse.message
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error parsing error response", e)
-                }
-                Log.e(TAG, "Failed to create product: $errorMessage")
-                ResultState.Error(errorMessage)
+                ResultState.Error("HTTP Error ${response.code()}")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Exception creating product", e)
-            ResultState.Error(e.message ?: "Connection error")
+            ResultState.Error(e.message ?: "Network error")
         }
     }
 
@@ -159,188 +94,79 @@ class ProductRepository {
         slug: String?,
         description: String?,
         basePrice: Double,
-        imageUrl: String?,
-        isActive: Boolean
+        isActive: Boolean,
+        imageUrl: String?
     ): ResultState<ProductResp> {
         return try {
-            Log.d(TAG, "Updating product: id=$id, name=$productName")
-            val request = UpdateProductRequest(
-                id = id,
-                categoryId = categoryId,
-                brandId = brandId,
-                productName = productName,
-                slug = slug,
-                description = description,
-                basePrice = basePrice,
-                isActive = isActive,
-                imageUrls = if (!imageUrl.isNullOrBlank()) listOf(imageUrl) else null
-            )
-
+            val imagesList = if (!imageUrl.isNullOrBlank()) listOf(imageUrl) else null
+            // Đã nhét `id` vào request thay vì Path
+            val request = UpdateProductRequest(id, categoryId, brandId, productName, slug, description, basePrice, isActive, imagesList)
             val response = productApi.updateProduct(request)
-
             if (response.isSuccessful && response.body() != null) {
                 val apiResponse = response.body()!!
                 if (apiResponse.success && apiResponse.data != null) {
                     ResultState.Success(apiResponse.data)
                 } else {
-                    val errorMsg = apiResponse.message ?: "Failed to update product"
-                    Log.e(TAG, "API returned error: $errorMsg")
-                    ResultState.Error(errorMsg)
+                    ResultState.Error(apiResponse.message ?: "Failed to update product")
                 }
             } else {
-                var errorMessage = "HTTP ${response.code()}: Failed to update product"
-                try {
-                    val errorBody = response.errorBody()?.string()
-                    if (errorBody != null) {
-                        val errorResponse = gson.fromJson(errorBody, ApiResponse::class.java)
-                        if (errorResponse.message != null) {
-                            errorMessage = errorResponse.message
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error parsing error response", e)
-                }
-                Log.e(TAG, "Failed to update product: $errorMessage")
-                ResultState.Error(errorMessage)
+                ResultState.Error("HTTP Error ${response.code()}")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Exception updating product", e)
-            ResultState.Error(e.message ?: "Connection error")
+            ResultState.Error(e.message ?: "Network error")
         }
     }
 
-    suspend fun deleteProduct(productId: String): ResultState<Unit> {
+    suspend fun deleteProduct(id: String): ResultState<Boolean> {
         return try {
-            Log.d(TAG, "Deleting product: id=$productId")
-            val response = productApi.deleteProduct(productId)
-
-            if (response.isSuccessful) {
-                ResultState.Success(Unit)
+            val response = productApi.deleteProduct(id)
+            if (response.isSuccessful && response.body() != null) {
+                val apiResponse = response.body()!!
+                if (apiResponse.success) ResultState.Success(true)
+                else ResultState.Error(apiResponse.message ?: "Failed to delete product")
             } else {
-                var errorMessage = "HTTP ${response.code()}: Failed to delete product"
-                try {
-                    val errorBody = response.errorBody()?.string()
-                    if (!errorBody.isNullOrBlank()) {
-                        val errorResponse = gson.fromJson(errorBody, ApiResponse::class.java)
-                        if (errorResponse?.message != null) {
-                            errorMessage = errorResponse.message
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error parsing error response", e)
-                }
-                Log.e(TAG, "Failed to delete product: $errorMessage")
-                ResultState.Error(errorMessage)
+                ResultState.Error("HTTP Error ${response.code()}")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Exception deleting product", e)
-            ResultState.Error(e.message ?: "Connection error")
+            ResultState.Error(e.message ?: "Network error")
         }
     }
 
-    suspend fun getCart(): ResultState<CartResponse> {
+    suspend fun addVariant(
+        productId: String, sku: String, size: String?, color: String?, weight: String?,
+        gripSize: String?, stringTension: String?, stockQuantity: Int, priceAdjustment: Double
+    ): ResultState<ProductVariantResp> {
         return try {
-            Log.d(TAG, "Fetching cart")
-            // Mock data for now - backend cart API can be integrated later
-            ResultState.Success(
-                CartResponse(
-                    items = emptyList(),
-                    subtotal = 0.0,
-                    discount = null,
-                    voucherCode = null,
-                    total = 0.0
-                )
-            )
+            val req = CreateProductVariantRequest(sku, size, color, weight, gripSize, stringTension, null, null, priceAdjustment, stockQuantity, true)
+            val response = productApi.addProductVariant(productId, req)
+            if (response.isSuccessful && response.body() != null) {
+                val body = response.body()!!
+                if (body.success && body.data != null) ResultState.Success(body.data)
+                else ResultState.Error(body.message ?: "Lỗi thêm biến thể")
+            } else {
+                ResultState.Error("Lỗi HTTP ${response.code()}")
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "Error fetching cart", e)
-            ResultState.Error(e.message ?: "Unknown error")
+            ResultState.Error(e.message ?: "Lỗi mạng")
         }
     }
 
-    suspend fun removeFromCart(itemId: String): ResultState<Unit> {
+    suspend fun updateVariant(
+        variantId: String, size: String?, color: String?, stockQuantity: Int, priceAdjustment: Double, isActive: Boolean
+    ): ResultState<ProductVariantResp> {
         return try {
-            Log.d(TAG, "Removing item from cart: $itemId")
-            ResultState.Success(Unit)
+            // Đã nhét `id` vào request thay vì Path
+            val req = UpdateProductVariantRequest(variantId, size, color, priceAdjustment, stockQuantity, isActive)
+            val response = productApi.updateProductVariant(req)
+            if (response.isSuccessful && response.body() != null) {
+                val body = response.body()!!
+                if (body.success && body.data != null) ResultState.Success(body.data)
+                else ResultState.Error(body.message ?: "Lỗi cập nhật biến thể")
+            } else {
+                ResultState.Error("Lỗi HTTP ${response.code()}")
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "Error removing from cart", e)
-            ResultState.Error(e.message ?: "Unknown error")
-        }
-    }
-
-    suspend fun applyVoucher(code: String): ResultState<CartResponse> {
-        return try {
-            Log.d(TAG, "Applying voucher: $code")
-            ResultState.Error("Invalid voucher code")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error applying voucher", e)
-            ResultState.Error(e.message ?: "Unknown error")
-        }
-    }
-
-    suspend fun getHome(): ResultState<HomeResponse> {
-        return try {
-            Log.d(TAG, "Fetching home data")
-            // Mock data for now - backend home API can be integrated later
-            ResultState.Success(
-                HomeResponse(
-                    banners = emptyList(),
-                    featuredCategories = emptyList(),
-                    featuredProducts = emptyList()
-                )
-            )
-        } catch (e: Exception) {
-            Log.e(TAG, "Error fetching home", e)
-            ResultState.Error(e.message ?: "Unknown error")
-        }
-    }
-
-    suspend fun getProductDetail(productId: String): ResultState<ProductDetail> {
-        return try {
-            Log.d(TAG, "Fetching product detail: $productId")
-            // Use mock data for now
-            ResultState.Success(MockDataProvider.getMockProductDetail(productId))
-        } catch (e: Exception) {
-            Log.e(TAG, "Error fetching product detail", e)
-            ResultState.Error(e.message ?: "Unknown error")
-        }
-    }
-
-    suspend fun addToCart(productId: String, quantity: Int): ResultState<CartItem> {
-        return try {
-            Log.d(TAG, "Adding to cart: productId=$productId, quantity=$quantity")
-            ResultState.Success(
-                CartItem(
-                    id = "cart-item-${System.currentTimeMillis()}",
-                    productId = productId,
-                    productName = "Product $productId",
-                    variantId = null,
-                    quantity = quantity,
-                    price = 100.0,
-                    subtotal = 100.0 * quantity,
-                    imageUrl = ""
-                )
-            )
-        } catch (e: Exception) {
-            Log.e(TAG, "Error adding to cart", e)
-            ResultState.Error(e.message ?: "Unknown error")
-        }
-    }
-
-    suspend fun getCheckoutQuote(): ResultState<CheckoutQuoteResponse> {
-        return try {
-            Log.d(TAG, "Fetching checkout quote")
-            ResultState.Success(
-                CheckoutQuoteResponse(
-                    subtotal = 0.0,
-                    shippingFee = 0.0,
-                    discount = 0.0,
-                    tax = 0.0,
-                    total = 0.0
-                )
-            )
-        } catch (e: Exception) {
-            Log.e(TAG, "Error fetching checkout quote", e)
-            ResultState.Error(e.message ?: "Unknown error")
+            ResultState.Error(e.message ?: "Lỗi mạng")
         }
     }
 }

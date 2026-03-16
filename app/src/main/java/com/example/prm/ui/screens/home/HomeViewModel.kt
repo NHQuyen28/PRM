@@ -90,11 +90,11 @@ class HomeViewModel(
         }
     }
 
-    fun addToCart(productId: String) {
-        viewModelScope.launch {
-            repository.addToCart(productId, 1)
-        }
-    }
+//    fun addToCart(productId: String) {
+//        viewModelScope.launch {
+//            repository.addToCart(productId, 1)
+//        }
+//    }
 
     fun logout() {
         sessionManager?.logout()
