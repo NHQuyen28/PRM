@@ -12,15 +12,16 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 import android.util.Log
+import com.example.prm.data.remote.api.PaymentApi
 
 object RetrofitClient {
     private const val TAG = "RetrofitClient"
     // Change this to your backend URL
     // For localhost: https://10.0.2.2:5001/api/ (Android emulator - HTTPS)
     // For real device: https://YOUR_MACHINE_IP:5001/api/
-    private const val BASE_URL = "https://10.0.2.2:5001/api/"
+    //private const val BASE_URL = "https://10.0.2.2:5001/api/"
 
-    // OLD: private const val BASE_URL = "http://10.0.2.2:5000/api/"
+    private const val BASE_URL = "http://10.0.2.2:5000/api/"
 
     // Will be initialized from the app layer so that we can attach tokens
     @Volatile
@@ -87,6 +88,10 @@ object RetrofitClient {
 
     val orderApi: OrderApi by lazy {
         retrofit.create(OrderApi::class.java)
+    }
+
+    val paymentApi: PaymentApi by lazy {
+        retrofit.create(PaymentApi::class.java)
     }
 }
 

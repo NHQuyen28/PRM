@@ -42,7 +42,6 @@ import android.graphics.BitmapFactory
 import android.util.Base64
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.asImageBitmap
-import com.example.prm.data.remote.dto.AddressResponse
 import com.example.prm.data.remote.dto.OrderResponse
 
 @Composable
@@ -61,17 +60,9 @@ fun ProfileScreen(
 
     var showEditDialog by remember { mutableStateOf(false) }
 
-    var showAddressDialog by remember { mutableStateOf(false) }
-
-    var showAddresses by remember { mutableStateOf(false) }
-
     var showOrders by remember { mutableStateOf(false) }
 
-    var showEditAddressDialog by remember { mutableStateOf(false) }
-    var editingAddress by remember { mutableStateOf<AddressResponse?>(null) }
-
     var showMapDialog by remember { mutableStateOf(false) }
-    var selectedAddressForMap by remember { mutableStateOf<AddressResponse?>(null) }
 
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -122,7 +113,10 @@ fun ProfileScreen(
                     }
 
                     item {
-                        ProfileInfoCardsModern(profile)
+                        ProfileInfoCardsModern(
+                            profile,
+                            onAddressClick = { showMapDialog = true }
+                        )
                     }
 
                     item {
@@ -148,49 +142,19 @@ fun ProfileScreen(
 
                     item {
                         ProfileMenuItemModern(
-                            title = "📍 Add Addresses",
-                            subtitle = "Manage delivery addresses",
-                            onClick = {
-                                showAddressDialog = true
-                            }
-                        )
-                    }
-
-                    item {
-                        ProfileMenuItemModern(
-                            title = "📍View My Addresses",
-                            subtitle = "Manage delivery addresses",
-                            onClick = {
-                                showAddresses = !showAddresses
-
-                                if (showAddresses) {
-                                    viewModel.loadAddresses()
-                                }
-                            }
-                        )
-
-                    }
-
-                    item {
-                        ProfileMenuItemModern(
                             title = "📦 My Orders",
                             subtitle = "View your order history",
                             onClick = {
-
                                 showOrders = !showOrders
-
                                 if (showOrders) {
                                     viewModel.loadOrders()
                                 }
-
                             }
                         )
                     }
 
                     if (showOrders) {
-
                         item {
-
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -199,102 +163,24 @@ fun ProfileScreen(
                                 shadowElevation = 4.dp,
                                 color = Color.White
                             ) {
-
                                 Column(modifier = Modifier.padding(16.dp)) {
-
                                     Text(
                                         text = "My Orders",
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold
                                     )
-
                                     Spacer(modifier = Modifier.height(10.dp))
-
                                     if (uiState.orders.isEmpty()) {
-
-                                        Text(
-                                            "No orders yet",
-                                            color = Color.Gray
-                                        )
-
+                                        Text("No orders yet", color = Color.Gray)
                                     } else {
-
                                         uiState.orders.forEach { order ->
-
                                             OrderItem(order)
-
                                             Spacer(modifier = Modifier.height(10.dp))
-
                                         }
-
                                     }
-
                                 }
-
                             }
-
                         }
-
-                    }
-
-
-
-                    if (showAddresses) {
-
-                        item {
-
-                            Surface(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                shape = RoundedCornerShape(16.dp),
-                                shadowElevation = 4.dp,
-                                color = Color.White
-                            ) {
-
-                                Column(modifier = Modifier.padding(16.dp)) {
-
-                                    Text(
-                                        text = "Saved Addresses",
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-
-                                    Spacer(modifier = Modifier.height(10.dp))
-
-                                    uiState.addresses.forEach { address ->
-
-                                        AddressItem(
-                                            address = address,
-
-                                            onSetDefault = { id ->
-                                                viewModel.setDefaultAddress(id)
-                                            },
-
-                                            onDelete = { id ->
-                                                viewModel.deleteAddress(id)
-                                            },
-
-                                            onEdit = { address ->
-                                                editingAddress = address
-                                                showEditAddressDialog = true
-                                            },
-
-                                            onViewMap = { address ->
-                                                selectedAddressForMap = address
-                                                showMapDialog = true
-                                            }
-                                        )
-
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                    }
-
-                                }
-
-                            }
-
-                        }
-
                     }
 
                     item {
@@ -463,239 +349,8 @@ fun ProfileScreen(
             )
         }
 
-        if (showEditAddressDialog && editingAddress != null) {
-
-            var recipientName by remember { mutableStateOf(editingAddress!!.recipientName) }
-            var phone by remember { mutableStateOf(editingAddress!!.phone) }
-            var province by remember { mutableStateOf(editingAddress!!.province) }
-            var district by remember { mutableStateOf(editingAddress!!.district) }
-            var ward by remember { mutableStateOf(editingAddress!!.ward) }
-            var detailAddress by remember { mutableStateOf(editingAddress!!.detailAddress) }
-            var isDefault by remember { mutableStateOf(editingAddress!!.isDefault) }
-
-            AlertDialog(
-
-                onDismissRequest = { showEditAddressDialog = false },
-
-                title = { Text("Edit Address") },
-
-                text = {
-
-                    Column {
-
-                        OutlinedTextField(
-                            value = recipientName,
-                            onValueChange = { recipientName = it },
-                            label = { Text("Recipient Name") }
-                        )
-
-                        OutlinedTextField(
-                            value = phone,
-                            onValueChange = { phone = it },
-                            label = { Text("Phone") }
-                        )
-
-                        OutlinedTextField(
-                            value = province,
-                            onValueChange = { province = it },
-                            label = { Text("Province") }
-                        )
-
-                        OutlinedTextField(
-                            value = district,
-                            onValueChange = { district = it },
-                            label = { Text("District") }
-                        )
-
-                        OutlinedTextField(
-                            value = ward,
-                            onValueChange = { ward = it },
-                            label = { Text("Ward") }
-                        )
-
-                        OutlinedTextField(
-                            value = detailAddress,
-                            onValueChange = { detailAddress = it },
-                            label = { Text("Detail Address") }
-                        )
-
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-
-                            Checkbox(
-                                checked = isDefault,
-                                onCheckedChange = { isDefault = it }
-                            )
-
-                            Text("Set as default")
-                        }
-                    }
-                },
-
-                confirmButton = {
-
-                    Button(
-                        onClick = {
-
-                            viewModel.updateAddress(
-                                editingAddress!!.id,
-                                recipientName,
-                                phone,
-                                province,
-                                district,
-                                ward,
-                                detailAddress,
-                                isDefault
-                            )
-
-                            showEditAddressDialog = false
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4CAF50),
-                            contentColor = Color.White
-                        )
-                    ) {
-                        Text("Save")
-                    }
-
-                },
-
-                dismissButton = {
-
-                    Button(
-                        onClick = { showEditAddressDialog = false },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE53935),
-                            contentColor = Color.White
-                        )
-                    ) {
-                        Text("Cancel")
-                    }
-
-                }
-            )
-        }
-
-        if (showAddressDialog) {
-
-            var recipientName by remember { mutableStateOf("") }
-            var phone by remember { mutableStateOf("") }
-            var province by remember { mutableStateOf("") }
-            var district by remember { mutableStateOf("") }
-            var ward by remember { mutableStateOf("") }
-            var detailAddress by remember { mutableStateOf("") }
-            var isDefault by remember { mutableStateOf(false) }
-
-            AlertDialog(
-
-                onDismissRequest = { showAddressDialog = false },
-
-                title = { Text("Add New Address") },
-
-                text = {
-                    Column {
-
-                        OutlinedTextField(
-                            value = recipientName,
-                            onValueChange = { recipientName = it },
-                            label = { Text("Recipient Name") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        OutlinedTextField(
-                            value = phone,
-                            onValueChange = { phone = it },
-                            label = { Text("Phone") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        OutlinedTextField(
-                            value = province,
-                            onValueChange = { province = it },
-                            label = { Text("Province") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        OutlinedTextField(
-                            value = district,
-                            onValueChange = { district = it },
-                            label = { Text("District") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        OutlinedTextField(
-                            value = ward,
-                            onValueChange = { ward = it },
-                            label = { Text("Ward") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        OutlinedTextField(
-                            value = detailAddress,
-                            onValueChange = { detailAddress = it },
-                            label = { Text("Detail Address") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-
-                            Checkbox(
-                                checked = isDefault,
-                                onCheckedChange = { isDefault = it }
-                            )
-
-                            Text("Set as default address")
-                        }
-                    }
-                },
-
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            viewModel.createAddress(
-                                recipientName,
-                                phone,
-                                province,
-                                district,
-                                ward,
-                                detailAddress,
-                                isDefault
-                            )
-                            showAddressDialog = false
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4CAF50),
-                            contentColor = Color.White
-                        )
-                    ) {
-                        Text("Save")
-                    }
-                },
-
-                dismissButton = {
-                    Button(
-                        onClick = { showAddressDialog = false },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFE53935),
-                            contentColor = Color.White
-                        )
-                    ) {
-                        Text("Cancel")
-                    }
-                }
-            )
-        }
-
-        if (showMapDialog && selectedAddressForMap != null) {
+        if (showMapDialog && uiState.profile != null) {
+            val profile = uiState.profile!!
             Dialog(
                 onDismissRequest = { showMapDialog = false },
                 properties = DialogProperties(
@@ -717,114 +372,14 @@ fun ProfileScreen(
                     ) {
                         MapScreen(
                             onBackClick = { showMapDialog = false },
-                            recipientName = selectedAddressForMap!!.recipientName,
-                            phone = selectedAddressForMap!!.phone,
-                            fullAddress = selectedAddressForMap!!.fullAddress,
+                            recipientName = profile.fullName,
+                            phone = profile.phone ?: "Not provided",
+                            fullAddress = profile.address ?: "Not provided",
                             latitude = 10.7769,
                             longitude = 106.6869
                         )
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun AddressItem(
-    address: AddressResponse,
-    onSetDefault: (String) -> Unit,
-    onDelete: (String) -> Unit,
-    onEdit: (AddressResponse) -> Unit,
-    onViewMap: (AddressResponse) -> Unit
-) {
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFFF8F8F8), RoundedCornerShape(10.dp))
-            .padding(12.dp)
-    ) {
-
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-
-            Text(
-                text = address.recipientName,
-                fontWeight = FontWeight.Bold
-            )
-
-            if (address.isDefault) {
-
-                Text(
-                    text = "Default",
-                    color = Color.White,
-                    modifier = Modifier
-                        .background(Color(0xFF27AE60), RoundedCornerShape(6.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Text(address.phone)
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Text(
-            text = address.fullAddress,
-            color = Color.Gray,
-            fontSize = 13.sp
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-
-            Button(
-                onClick = { onSetDefault(address.id) },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF27AE60)
-                ),
-                modifier = Modifier.weight(1f).height(36.dp)
-            ) {
-                Text("Default", fontSize = 11.sp)
-            }
-
-            Button(
-                onClick = { onViewMap(address) },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF00A8FF)
-                ),
-                modifier = Modifier.weight(1f).height(36.dp)
-            ) {
-                Text("Map", fontSize = 11.sp)
-            }
-
-            Button(
-                onClick = { onEdit(address) },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFF39C12)
-                ),
-                modifier = Modifier.weight(1f).height(36.dp)
-            ) {
-                Text("Edit", fontSize = 11.sp)
-            }
-
-            Button(
-                onClick = { onDelete(address.id) },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFE74C3C)
-                ),
-                modifier = Modifier.weight(1f).height(36.dp)
-            ) {
-                Text("Delete", fontSize = 11.sp)
             }
         }
     }
@@ -922,7 +477,10 @@ private fun ProfileAvatarModern(
 }
 
 @Composable
-private fun ProfileInfoCardsModern(profile: ProfileResponse) {
+private fun ProfileInfoCardsModern(
+    profile: ProfileResponse,
+    onAddressClick: () -> Unit = {}
+) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -947,7 +505,13 @@ private fun ProfileInfoCardsModern(profile: ProfileResponse) {
             HorizontalDivider(color = Color(0xFFEEE))
             Spacer(modifier = Modifier.height(16.dp))
 
-            ProfileRowModern(Icons.Default.LocationOn, "Address", profile.address ?: "Not added", Color(0xFFE67E22))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onAddressClick() }
+            ) {
+                ProfileRowModern(Icons.Default.LocationOn, "Address", profile.address ?: "Not added", Color(0xFFE67E22))
+            }
         }
     }
 }
