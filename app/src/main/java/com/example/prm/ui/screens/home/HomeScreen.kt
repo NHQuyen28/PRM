@@ -39,12 +39,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import kotlinx.coroutines.delay
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.MarkerState
+import androidx.compose.ui.viewinterop.AndroidView
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
 
 @Composable
 fun HomeScreen(
@@ -753,9 +752,11 @@ private fun ViewAllProductsCTA(navController: NavHostController) {
 private fun ShopLocationMap() {
     val shopLatitude = 10.7769  // Saigon coordinates
     val shopLongitude = 106.6869
-    val location = LatLng(shopLatitude, shopLongitude)
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(location, 16f)
+    val context = LocalContext.current
+
+    // Initialize osmdroid
+    LaunchedEffect(Unit) {
+        Configuration.getInstance().load(context, android.preference.PreferenceManager.getDefaultSharedPreferences(context))
     }
 
     Column(
@@ -781,16 +782,17 @@ private fun ShopLocationMap() {
                 .shadow(elevation = 4.dp, shape = RoundedCornerShape(16.dp)),
             color = Color.White
         ) {
-            GoogleMap(
+            AndroidView(
                 modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState
-            ) {
-                Marker(
-                    state = MarkerState(position = location),
-                    title = "Badmini Shop",
-                    snippet = "Badminton Equipment Store\nHo Chi Minh City, Vietnam"
-                )
-            }
+                factory = { factoryContext ->
+                    MapView(factoryContext).apply {
+                        setTileSource(TileSourceFactory.MAPNIK)
+                        val controller = controller
+                        controller.setZoom(16.0)
+                        controller.setCenter(GeoPoint(shopLatitude, shopLongitude))
+                    }
+                }
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))

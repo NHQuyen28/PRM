@@ -9,15 +9,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.MarkerState
+import androidx.compose.ui.viewinterop.AndroidView
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
 import com.example.prm.ui.theme.PurpleJobsly
 
 @Composable
@@ -29,22 +29,26 @@ fun MapScreen(
     latitude: Double = 10.7769,
     longitude: Double = 106.6869
 ) {
-    val location = LatLng(latitude, longitude)
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(location, 15f)
+    val context = LocalContext.current
+    
+    // Initialize osmdroid
+    LaunchedEffect(Unit) {
+        Configuration.getInstance().load(context, android.preference.PreferenceManager.getDefaultSharedPreferences(context))
     }
-
+    
     Box(modifier = Modifier.fillMaxSize()) {
-        GoogleMap(
+        // OpenStreetMap using osmdroid
+        AndroidView(
             modifier = Modifier.fillMaxSize(),
-            cameraPositionState = cameraPositionState
-        ) {
-            Marker(
-                state = MarkerState(position = location),
-                title = recipientName,
-                snippet = fullAddress
-            )
-        }
+            factory = { factoryContext ->
+                MapView(factoryContext).apply {
+                    setTileSource(TileSourceFactory.MAPNIK)
+                    val controller = controller
+                    controller.setZoom(15.0)
+                    controller.setCenter(GeoPoint(latitude, longitude))
+                }
+            }
+        )
 
         // Header
         Box(
