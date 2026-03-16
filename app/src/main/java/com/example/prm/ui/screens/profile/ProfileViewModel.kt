@@ -39,8 +39,14 @@ class ProfileViewModel : ViewModel() {
                 }
 
                 is ResultState.Error -> {
+                    val errorMsg = result.message.lowercase()
+                    val isAuthError = errorMsg.contains("not logged in") || 
+                                      errorMsg.contains("unauthorized") ||
+                                      errorMsg.contains("401") ||
+                                      errorMsg.contains("token expired")
                     _uiState.value = ProfileUiState(
-                        error = result.message
+                        error = result.message,
+                        isAuthError = isAuthError
                     )
                 }
 

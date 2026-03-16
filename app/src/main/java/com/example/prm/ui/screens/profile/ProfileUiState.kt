@@ -9,5 +9,6 @@ data class ProfileUiState(
     val profile: ProfileResponse? = null,
     val addresses: List<AddressResponse> = emptyList(),
     val orders: List<OrderResponse> = emptyList(),
-    val error: String? = null
+    val error: String? = null,
+    val isAuthError: Boolean = false
 )
