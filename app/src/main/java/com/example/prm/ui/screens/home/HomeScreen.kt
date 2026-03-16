@@ -118,7 +118,8 @@ fun HomeScreen(
                     products = uiState.products,
                     isLoading = uiState.isLoading,
                     navController = navController,
-                    onAddToCart = { product -> viewModel.addToCart(product.id) }
+                    // TẠM THỜI BỎ TRỐNG LỆNH NÀY VÌ ĐÃ ẨN NÚT ADD TO CART
+                    onAddToCart = { /* Không làm gì cả */ }
                 )
             }
 
