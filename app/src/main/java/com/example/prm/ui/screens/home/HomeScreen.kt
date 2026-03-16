@@ -696,13 +696,13 @@ private fun ModernProductGridCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        "₩${String.format("%,d", product.price.toInt())}",
+                        "${String.format(java.util.Locale("vi", "VN"), "%,d", product.price.toInt())} đ",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = PurpleJobsly
                     )
                     Text(
-                        "₩${String.format("%,d", (product.price * 1.25).toInt())}",
+                        "${String.format(java.util.Locale("vi", "VN"), "%,d", (product.price * 1.25).toInt())} đ",
                         fontSize = 12.sp,
                         color = Color(0xFF999),
                         textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough
