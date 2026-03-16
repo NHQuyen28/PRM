@@ -183,14 +183,14 @@ fun ProductDetailScreen(
 
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text(
-                                text = "₩${String.format("%,d", currentPrice.toLong())}", // Giá update theo biến thể
+                                text = "${String.format(java.util.Locale("vi", "VN"), "%,d", currentPrice.toLong())} đ", // Giá update theo biến thể
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = PurpleJobsly
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = "₩${String.format("%,d", (currentPrice * 1.25).toLong())}",
+                                text = "${String.format(java.util.Locale("vi", "VN"), "%,d", (currentPrice * 1.25).toLong())} đ",
                                 fontSize = 16.sp,
                                 color = Color.Gray,
                                 textDecoration = TextDecoration.LineThrough,
@@ -330,7 +330,7 @@ private fun BottomCartBar(
                     Text("Select Option", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 } else {
                     Text(
-                        "Add ₩${String.format("%,d", (price * quantity).toLong())}",
+                        "Add ${String.format(java.util.Locale("vi", "VN"), "%,d", (price * quantity).toLong())} đ",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
