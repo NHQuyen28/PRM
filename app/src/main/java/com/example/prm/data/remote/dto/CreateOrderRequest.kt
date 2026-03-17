@@ -14,6 +14,8 @@ data class CreateOrderRequest(
 
     val paymentMethod: Int,
 
-    val notes: String?
+    val notes: String?,
+    
+    val totalAmount: Double
 
 )

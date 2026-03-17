@@ -173,8 +173,28 @@ fun AppNavigation() {
             CartScreen(navController)
         }
 
-        composable("checkout") {
-            CheckoutScreen(navController)
+        composable(
+            route = "checkout?discount={discount}&voucherId={voucherId}",
+            arguments = listOf(
+                navArgument("discount") {
+                    type = NavType.FloatType
+                    defaultValue = 0f
+                },
+                navArgument("voucherId") {
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
+        ) { backStackEntry ->
+
+            val discount = backStackEntry.arguments?.getFloat("discount") ?: 0f
+            val voucherId = backStackEntry.arguments?.getString("voucherId")
+
+            CheckoutScreen(
+                navController = navController,
+                discount = discount.toDouble(),
+                voucherId = voucherId
+            )
         }
 
         composable(

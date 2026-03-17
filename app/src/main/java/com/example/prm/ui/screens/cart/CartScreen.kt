@@ -36,8 +36,11 @@ fun CartScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    var showVoucherDialog by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         viewModel.loadCart()
+        viewModel.loadVouchers()
     }
 
     Box(
@@ -78,7 +81,9 @@ fun CartScreen(
                     CartWithItems(
                         cart = uiState.cart!!,
                         viewModel = viewModel,
-                        navController = navController
+                        navController = navController,
+                        discount = uiState.discountAmount,
+                        onSelectVoucher = { showVoucherDialog = true }
                     )
                 }
             }
@@ -89,6 +94,14 @@ fun CartScreen(
             SnackbarHost(
                 hostState = remember { SnackbarHostState() },
                 modifier = Modifier.align(Alignment.BottomCenter)
+            )
+        }
+
+        if (showVoucherDialog) {
+            VoucherDialog(
+                vouchers = viewModel.vouchers.collectAsState().value,
+                onSelect = { viewModel.applyVoucher(it) },
+                onDismiss = { showVoucherDialog = false }
             )
         }
     }
@@ -229,7 +242,9 @@ private fun EmptyCartMessage(navController: NavHostController) {
 private fun CartWithItems(
     cart: CartDataDto,
     viewModel: CartViewModel,
-    navController: NavHostController
+    navController: NavHostController,
+    discount: Double,
+    onSelectVoucher: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
@@ -258,7 +273,9 @@ private fun CartWithItems(
         // Order Summary & Checkout
         CartSummarySection(
             cart = cart,
-            navController = navController
+            navController = navController,
+            discount = discount,
+            onSelectVoucher = onSelectVoucher
         )
     }
 }
@@ -387,8 +404,13 @@ private fun ModernCartItemCard(
 @Composable
 private fun CartSummarySection(
     cart: CartDataDto,
-    navController: NavHostController
+    navController: NavHostController,
+    discount: Double,
+    onSelectVoucher: () -> Unit
 ) {
+
+    val total = cart.subtotal + 30000 - discount
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -429,7 +451,7 @@ private fun CartSummarySection(
             ) {
                 Text("Shipping", fontSize = 13.sp, color = Color(0xFF666))
                 Text(
-                    "30,000 đ",
+                    "30,000.00 đ",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -439,14 +461,22 @@ private fun CartSummarySection(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Discount", fontSize = 13.sp, color = Color(0xFF666))
                 Text(
-                    "-0 đ",
+                    text = "Apply Voucher",
+                    color = PurpleJobsly,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFFFF6B6B)
+                    modifier = Modifier.clickable { onSelectVoucher() }
+                )
+
+                Text(
+                    text = "-${String.format("%,.2f", discount)} đ",
+                    color = Color.Red,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
 
@@ -468,7 +498,7 @@ private fun CartSummarySection(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    "${String.format("%,.2f", cart.subtotal + 30000)} đ",
+                    "${String.format("%,.2f", total)} đ",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = PurpleJobsly
@@ -477,7 +507,11 @@ private fun CartSummarySection(
 
             // Checkout Button
             Button(
-                onClick = { navController.navigate("checkout") },
+                onClick = {
+                    navController.navigate(
+                        "checkout?discount=$discount&voucherId=${cart.id}"
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp),
