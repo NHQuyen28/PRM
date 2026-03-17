@@ -19,7 +19,9 @@ object RetrofitClient {
     // Change this to your backend URL
     // For localhost: https://10.0.2.2:5001/api/ (Android emulator - HTTPS)
     // For real device: https://YOUR_MACHINE_IP:5001/api/
-    private const val BASE_URL = "https://10.0.2.2:5001/api/"
+    //private const val BASE_URL = "https://10.0.2.2:5001/api/"
+
+    private const val BASE_URL = "http://10.0.2.2:5000/api/"
 
     // Will be initialized from the app layer so that we can attach tokens
     @Volatile

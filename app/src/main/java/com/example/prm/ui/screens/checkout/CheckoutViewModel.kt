@@ -64,13 +64,17 @@ class CheckoutViewModel : ViewModel() {
         )
 
     }
-
     fun placeOrder() {
 
         viewModelScope.launch {
 
             val address = _uiState.value.selectedAddress ?: return@launch
             val cart = _uiState.value.cart ?: return@launch
+
+            // 🔥 THÊM ĐOẠN NÀY
+            val shipping = 30000.0
+            val discount = _uiState.value.discountAmount
+            val totalAmount = cart.subtotal + shipping - discount
 
             val request = CreateOrderRequest(
 
@@ -82,7 +86,10 @@ class CheckoutViewModel : ViewModel() {
 
                 shippingAddress = address.fullAddress,
 
-                voucherId = null,
+                voucherId = _uiState.value.selectedVoucherId,
+
+                // 🔥 QUAN TRỌNG NHẤT
+                totalAmount = totalAmount,
 
                 paymentMethod = 0,
 
@@ -97,7 +104,9 @@ class CheckoutViewModel : ViewModel() {
 
                     createMomoPayment(
                         orderId = order.id,
-                        amount = order.totalAmount
+
+                        // 🔥 ĐỪNG DÙNG order.totalAmount nữa
+                        amount = totalAmount
                     )
 
                 }
@@ -175,6 +184,17 @@ class CheckoutViewModel : ViewModel() {
 
         }
 
+    }
+
+    fun setVoucher(discount: Double, voucherId: String?) {
+        _uiState.value = _uiState.value.copy(
+            discountAmount = discount,
+            selectedVoucherId = voucherId
+        )
+    }
+
+    fun clearPaymentUrl() {
+        _uiState.value = _uiState.value.copy(paymentUrl = null)
     }
 
 }

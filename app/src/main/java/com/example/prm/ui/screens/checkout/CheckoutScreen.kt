@@ -26,6 +26,8 @@ import com.example.prm.ui.theme.PurpleJobsly
 @Composable
 fun CheckoutScreen(
     navController: NavHostController,
+    discount: Double = 0.0,
+    voucherId: String? = null,
     viewModel: CheckoutViewModel = viewModel()
 ) {
 
@@ -34,20 +36,18 @@ fun CheckoutScreen(
 
     val context = LocalContext.current
 
-    uiState.paymentUrl?.let { url ->
-
-        LaunchedEffect(url) {
-
+    LaunchedEffect(uiState.paymentUrl) {
+        uiState.paymentUrl?.let { url ->
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
             context.startActivity(intent)
-
+            viewModel.clearPaymentUrl()
         }
-
     }
 
     LaunchedEffect(Unit) {
         viewModel.loadAddresses()
         viewModel.loadCart()
+        viewModel.setVoucher(discount, voucherId)
     }
 
     Column(
@@ -139,6 +139,10 @@ fun CheckoutScreen(
 
         uiState.cart?.let { cart ->
 
+            val shipping = 30000.0
+            val discount = uiState.discountAmount
+            val total = cart.subtotal + shipping - discount
+
             Spacer(modifier = Modifier.height(12.dp))
 
             Card(
@@ -174,20 +178,41 @@ fun CheckoutScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
 
-                            Column {
-
-                                Text(item.productName)
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                            ) {
 
                                 Text(
-                                    "x${item.quantity}",
-                                    color = Color.Gray
+                                    text = item.productName,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 15.sp
                                 )
 
-                            }
+                                Spacer(modifier = Modifier.height(4.dp))
 
-                            Text(
-                                String.format("%,.2f đ", item.unitPrice * item.quantity)
-                            )
+                                Text(
+                                    text = "Số lượng: x${item.quantity}",
+                                    color = Color.Gray,
+                                    fontSize = 13.sp
+                                )
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End
+                                ) {
+                                    Text(
+                                        text = String.format("%,.0f đ", item.unitPrice * item.quantity),
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFF2E7D32)
+                                    )
+                                }
+
+                                Divider(modifier = Modifier.padding(top = 8.dp))
+                            }
 
                         }
 
@@ -199,20 +224,42 @@ fun CheckoutScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-
-                        Text(
-                            "Total",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-
-                        Text(
-                            text = String.format("%,.2f đ", cart.subtotal),
-                            color = Color(0xFF4CAF50),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-
+                        Text("Subtotal")
+                        Text("${String.format("%,.2f", cart.subtotal)} đ")
                     }
 
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Shipping")
+                        Text("30,000 đ")
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Voucher", color = PurpleJobsly)
+                        Text(
+                            "-${String.format("%,.2f", discount)} đ",
+                            color = Color.Red
+                        )
+                    }
+
+                    Divider()
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Total", fontWeight = FontWeight.Bold)
+                        Text(
+                            "${String.format("%,.2f", total)} đ",
+                            color = Color(0xFF4CAF50),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
 
             }

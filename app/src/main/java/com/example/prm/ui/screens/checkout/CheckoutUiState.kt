@@ -17,6 +17,10 @@ data class CheckoutUiState(
 
     val paymentUrl: String? = null,
 
-    val paymentResult: String? = null
+    val paymentResult: String? = null,
+
+    val discountAmount: Double = 0.0,
+
+    val selectedVoucherId: String? = null
 
 )
