@@ -36,6 +36,7 @@ fun CheckoutScreen(
 
     val context = LocalContext.current
 
+
     LaunchedEffect(uiState.paymentUrl) {
         uiState.paymentUrl?.let { url ->
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))

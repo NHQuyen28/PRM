@@ -44,7 +44,6 @@
                     android:host="payment-result"/>
             </intent-filter>
 
-
         </activity>
 
     </application>

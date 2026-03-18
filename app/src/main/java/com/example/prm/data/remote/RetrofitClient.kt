@@ -12,7 +12,7 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 import android.util.Log
-import com.example.prm.data.remote.api.PaymentApi
+import com.example.prm.data.remote.api.VnPayApi
 
 object RetrofitClient {
     private const val TAG = "RetrofitClient"
@@ -90,8 +90,10 @@ object RetrofitClient {
         retrofit.create(OrderApi::class.java)
     }
 
-    val paymentApi: PaymentApi by lazy {
-        retrofit.create(PaymentApi::class.java)
+    val vnPayApi: VnPayApi by lazy {
+        createService(VnPayApi::class.java)
     }
+
+
 }
 

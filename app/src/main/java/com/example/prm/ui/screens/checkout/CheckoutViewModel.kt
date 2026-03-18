@@ -7,7 +7,7 @@ import com.example.prm.data.remote.dto.CreateOrderRequest
 import com.example.prm.data.repository.AddressRepository
 import com.example.prm.data.repository.CartRepository
 import com.example.prm.data.repository.OrderRepository
-import com.example.prm.data.repository.PaymentRepository
+import com.example.prm.data.repository.VnPayRepository
 import com.example.prm.utils.ResultState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +21,9 @@ class CheckoutViewModel : ViewModel() {
 
     private val cartRepository = CartRepository()
 
-    private val paymentRepository = PaymentRepository()
+
+    private val vnPayRepository = VnPayRepository()
+
 
     private val _uiState = MutableStateFlow(CheckoutUiState())
     val uiState: StateFlow<CheckoutUiState> = _uiState
@@ -71,28 +73,18 @@ class CheckoutViewModel : ViewModel() {
             val address = _uiState.value.selectedAddress ?: return@launch
             val cart = _uiState.value.cart ?: return@launch
 
-            // 🔥 THÊM ĐOẠN NÀY
             val shipping = 30000.0
             val discount = _uiState.value.discountAmount
             val totalAmount = cart.subtotal + shipping - discount
 
             val request = CreateOrderRequest(
-
                 addressId = address.id,
-
                 recipientName = address.recipientName,
-
                 recipientPhone = address.phone,
-
                 shippingAddress = address.fullAddress,
-
                 voucherId = _uiState.value.selectedVoucherId,
-
-                // 🔥 QUAN TRỌNG NHẤT
                 totalAmount = totalAmount,
-
-                paymentMethod = 0,
-
+                paymentMethod = 1,
                 notes = null
             )
 
@@ -102,13 +94,11 @@ class CheckoutViewModel : ViewModel() {
 
                     val order = orderResult.data
 
-                    createMomoPayment(
+                    createVnPayPayment(
                         orderId = order.id,
-
-                        // 🔥 ĐỪNG DÙNG order.totalAmount nữa
-                        amount = totalAmount
+                        amount = totalAmount,
+                        fullName = address.recipientName
                     )
-
                 }
 
                 is ResultState.Error -> {
@@ -120,11 +110,8 @@ class CheckoutViewModel : ViewModel() {
                 }
 
                 else -> {}
-
             }
-
         }
-
     }
 
     fun loadCart() {
@@ -157,34 +144,37 @@ class CheckoutViewModel : ViewModel() {
 
     }
 
-    private suspend fun createMomoPayment(
+    private fun createVnPayPayment(
         orderId: String,
-        amount: Double
+        amount: Double,
+        fullName: String
     ) {
+        viewModelScope.launch {
 
-        when (val result = paymentRepository.createMomoPayment(orderId, amount)) {
+            when (val result = vnPayRepository.createPayment(orderId, amount, fullName)) {
 
-            is ResultState.Success -> {
+                is ResultState.Success -> {
 
-                _uiState.value = _uiState.value.copy(
-                    paymentUrl = result.data
-                )
+                    _uiState.value = _uiState.value.copy(
+                        paymentUrl = result.data
+                    )
 
+                }
+
+                is ResultState.Error -> {
+
+                    _uiState.value = _uiState.value.copy(
+                        error = result.message
+                    )
+
+                }
+
+                else -> {}
             }
-
-            is ResultState.Error -> {
-
-                _uiState.value = _uiState.value.copy(
-                    error = result.message
-                )
-
-            }
-
-            else -> {}
-
         }
-
     }
+
+
 
     fun setVoucher(discount: Double, voucherId: String?) {
         _uiState.value = _uiState.value.copy(

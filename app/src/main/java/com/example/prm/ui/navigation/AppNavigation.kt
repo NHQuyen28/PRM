@@ -198,25 +198,27 @@ fun AppNavigation() {
         }
 
         composable(
-            route = "payment_result?orderId={orderId}&resultCode={resultCode}",
+            route = "payment_result?success={success}&orderId={orderId}&code={code}",
             arguments = listOf(
+                navArgument("success") { type = NavType.StringType },
                 navArgument("orderId") { type = NavType.StringType },
-                navArgument("resultCode") { type = NavType.StringType }
+                navArgument("code") { type = NavType.StringType }
             ),
             deepLinks = listOf(
                 navDeepLink {
-                    uriPattern = "badmintonshop://payment-result?orderId={orderId}&resultCode={resultCode}"
+                    uriPattern = "badmintonshop://payment-result?success={success}&orderId={orderId}&code={code}"
                 }
             )
         ) { backStackEntry ->
 
+            val success = backStackEntry.arguments?.getString("success") ?: "false"
             val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
-            val resultCode = backStackEntry.arguments?.getString("resultCode") ?: "-1"
+            val code = backStackEntry.arguments?.getString("code") ?: ""
 
             PaymentResultScreen(
                 navController = navController,
                 orderId = orderId,
-                resultCode = resultCode
+                resultCode = code
             )
         }
 

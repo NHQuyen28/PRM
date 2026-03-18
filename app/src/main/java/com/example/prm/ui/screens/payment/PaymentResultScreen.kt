@@ -20,7 +20,7 @@ fun PaymentResultScreen(
     resultCode: String
 ) {
 
-    val success = resultCode == "0"
+    val success = resultCode == "00"
 
     Column(
         modifier = Modifier.fillMaxSize(),
