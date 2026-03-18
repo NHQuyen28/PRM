@@ -1041,6 +1041,10 @@ fun OrderItem(order: OrderResponse) {
             fontWeight = FontWeight.Bold
         )
 
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text("PaymentStatus: ${order.paymentStatusDisplay}")
+
         Spacer(modifier = Modifier.height(6.dp))
 
         order.orderDetails.forEach {
